@@ -157,7 +157,10 @@ int main()
       }
    }
    // Android client socket connection finish
-   while (cin.get() != '\n');
+   while(client_index != 11){
+      if(client_index==11) break;
+   }
+
    cout << "\nCurrent Client : " << client_index-1 << "\n";
    close(server_sock);
 
