@@ -282,8 +282,8 @@ def sendLogdata_toWebserver(port):
 
 
 if __name__=="__main__":
-    thraed_sendImage = threading.Thread(target=sendImage_toHPC, args=(SERVER_PORT3,))
-    thraed_sendImage.start()
-
     thraed_sendLog = threading.Thread(target=sendLogdata_toWebserver, args=(SERVER_PORT2,))
     thraed_sendLog.start()
+
+    thraed_sendImage = threading.Thread(target=sendImage_toHPC, args=(SERVER_PORT3,))
+    thraed_sendImage.start()
