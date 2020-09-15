@@ -287,3 +287,4 @@ if __name__=="__main__":
 
     thraed_sendImage = threading.Thread(target=sendImage_toHPC, args=(SERVER_PORT3,))
     thraed_sendImage.start()
+
