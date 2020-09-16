@@ -21,7 +21,7 @@ HOST = ''
 PORT = 22043    # to get image from Drone
 
 # then this program is client to send image to Web Server
-WebSERVER_IP = '10.100.201.132'  # HPC TSP server IP
+WebSERVER_IP = '116.89.189.55'  # HPC TSP server IP
 PORT2 = 22044   # to send image to Web(10004 external port)
 
 def Relay_server(port):
