@@ -1,104 +1,403 @@
-import socket
-import cv2
-import numpy as np
-import threading
-import numpy
+#include<iostream>
+#include<iomanip>
+#include <string>
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+//   library for Windows socket
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+// Thread for image proccessing
+#include <pthread.h>   
+#include <time.h>
+using namespace std;
 
-# return recived buffer from socket client
-def recvall(sock, count):
-    # Byte string
-    buf = b''
-    while count:
-        newbuf = sock.recv(count)
-        if not newbuf: return None
-        buf += newbuf
-        count -= len(newbuf)
-    return buf
+#define MAX_CLIENT 20
+#define real_user 11
+#define andport 22041
+#define droneport 22042
+const double pi = 3.1415926535897932384626433832795028841971693993751;
+
+double completed[15], cost = 0;
+int user;   // service requesting user number (target point number)
+int* course; // global variable about TSP Path
+int coursenum = 0;   // location of course array
+
+struct Target {      // Latitude and Longitude per each user(user numbering)
+   const char* pointNum;   // user number requesting while 3 min(target point number)
+   double latitude;
+   double longitude;
+};
+
+Target targetdata[21] = 
+{ {"0", 35.132833, 129.106215 }, {"1", 35.133118, 129.105832 }, {"2", 35.133139, 129.106001 }, 
+{"3", 35.133150, 129.106168 }, {"4", 35.133168, 129.106331 }, {"5", 35.133181, 129.106487 }, 
+{"6", 35.132965, 129.105877 }, {"7", 35.132983, 129.106019 }, {"8", 35.132994, 129.106182 }, 
+{"9", 35.133008, 129.106357 }, {"10", 35.132985, 129.106512 }, {"11", 35.132681, 129.105871 }, 
+{"12", 35.132695, 129.106040 }, {"13", 35.132706, 129.106222 }, {"14", 35.132721, 129.106391 },
+{"15", 35.132737, 129.106543 }, {"16", 35.132498, 129.105905 }, {"17", 35.132498, 129.106048 }, 
+{"18", 35.132516, 129.106236 }, {"19", 35.132526, 129.106435 }, {"20", 35.132537, 129.106584 } };
+// base point and allocated target point(Drone zone) GPS point  
 
 
-# HPC image processing server
-HOST = ''
-PORT = 22043    # to get image from Drone
+string snddata;   // string to send Client
 
-# then this program is client to send image to Web Server
-WebSERVER_IP = '116.89.189.55'  # HPC TSP server IP
-PORT2 = 22044   # to send image to Web(10004 external port)
+// to save user requesting GPS drone zone point information from Android app of User(client)
+Target from_user[real_user];
 
-def Relay_server(port):
+// GPS point comparing function prototype
+double toRad(double degree);      // degree to radian
+double calculateDistance(double lat1, double long1, double lat2, double long2);   // to calculate GPS data
 
-    try:
-        ## Connect to HPC image processing server
-        toWeb = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        ## server ip, port
-        toWeb.connect((WebSERVER_IP, PORT2))
-        print("Connect to Web!")
+// TSP algorithm function Prototype
+void takeInput(int points, double cordinates[real_user][real_user]);
+double least(int c, int points, double cordinates[real_user][real_user]);
+void mincost(int city, int points, double cordinates[real_user][real_user], int* course);
 
-        ## Connect to Web server
-        try:
-            # TCP
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print('Socket created')
+// Scoket connection and message function Prototype
+string makemsg(string snddata, struct Target targetpoint[real_user]);
+void* t_function(void* data);      // for thread to connect multiple Android user
 
-            # Set Server IP and port number
-            s.bind((HOST, PORT))
-            print('Socket bind complete')
-            # Waiting Client (Maximum 10)
-            s.listen(10)
-            print('Socket now listening')
+int client_index = 0;      // current calling service user(Android app) number
+int current_user = 0;
+int main()
+{
+   /* service process
+   get user wanting drone zone through Android app -> put requested drone zone data int TSP algorithm  
+   -> calculating TSP path, and send shortest visiting path data to Drone client(Pixhawk-Pi) */
+   cout << "Start Drone Delivery System\n";
 
-            # Connect, conn : socket object, addr : binding address
-            conn, addr = s.accept()
+   int i, j;   // value for loop
 
-            while True:
-                # stringData size from client (==(str(len(stringData))).encode().ljust(16))
-                length = recvall(conn, 16)
-                stringData = recvall(conn, int(length))
-                data = np.fromstring(stringData, dtype='uint8')
+   for(int i=0; i<real_user; i++){
+      from_user[i].pointNum = {0};
+      from_user[i].latitude = 0;
+      from_user[i].longitude = 0;
+   }
+   // Home Base point
+   from_user[0].pointNum = targetdata[0].pointNum;
+   from_user[0].latitude = targetdata[0].latitude;
+   from_user[0].longitude = targetdata[0].longitude;
+   client_index++;
 
-                toWeb.sendall((str(len(stringData))).encode().ljust(16) + stringData)   # send image to Web server
+   // Variables for Socket
+   // For android socket
+   int server_sock, client_sock;
+   struct sockaddr_in server_addr, client_addr;
+   int client_addr_size = sizeof(client_addr);
+   server_addr.sin_addr.s_addr = INADDR_ANY;
+   server_addr.sin_family = AF_INET;
+   server_addr.sin_port = htons(andport);   // For android socket
+   pthread_t thread_client[MAX_CLIENT];
 
-                # Decode data
-                frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
-                original = frame.copy()
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-                lower = np.array([0, 208, 94], dtype="uint8")
-                upper = np.array([179, 255, 232], dtype="uint8")
-                mask = cv2.inRange(frame, lower, upper)
+   // For Drone socket
+   int server_sock2, client_sock2;
+   struct sockaddr_in server_addr2, client_addr2;
+   int client_addr_size2 = sizeof(client_addr2);
+   server_addr2.sin_addr.s_addr = INADDR_ANY;
+   server_addr2.sin_family = AF_INET;
+   server_addr2.sin_port = htons(droneport);   // For Drone(Pixhawk-Pi) socket
 
-                # Find contours
-                cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                # Extract contours depending on OpenCV version
-                cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+   // Android socket connection start
+   if ((server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)      // socket create
+   {
+      cout << "socket create error\n";
+      return -1;
+   }
 
-                # Iterate through contours and filter by the number of vertices
-                for c in cnts:
-                    perimeter = cv2.arcLength(c, True)
-                    approx = cv2.approxPolyDP(c, 0.04 * perimeter, True)
-                    if len(approx) > 5:
-                        cv2.drawContours(original, [c], -1, (36, 255, 12), -1)
+   int on = 1;
+   if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+   {
+      cout << "socket option set error\n";
+      return -1;
+   }
 
-                cv2.imshow('mask', mask)
-                cv2.imshow('original', original)
-                cv2.imwrite('../../mask.png', mask)
-                cv2.imwrite('../../original.png', original)
+   if (bind(server_sock, (struct sockaddr*) & server_addr, sizeof(server_addr)) < 0)      // bind
+   {
+      cout << "bind error\n";
+      return -1;
+   }
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+   if (listen(server_sock, 5) < 0)      // listen
+   {
+      cout << "listen error\n";
+      return -1;
+   }
 
-        except s.error:    # when socket connection failed
-            # When everything is done, release the capture
-            cv2.destroyAllWindows()
-            print("Drone Socket close!!")
-            s.close()
-        finally:
-            s.close()
+   cout << "\nWaiting Client...\n\n";   // ready to connect Android client
 
-    except socket.error:  # when socket connection failed
-        print("Web Socket Close!!")
-        toWeb.close()
-    finally:
-        toWeb.close()
+   while (1)      // android socket connection
+   {
+      client_sock = accept(server_sock, (struct sockaddr*) & client_addr, (socklen_t*)& client_addr_size);
+      current_user++;
+      cout << "==================================================\nClient Addr " << inet_ntoa(client_addr.sin_addr) 
+     << "is Waiting\nZCurrent waiting User : " << current_user << "\nPort : " << ntohs(client_addr.sin_port) 
+     << "\n==================================================\n";
 
-if __name__=="__main__":
-    thread_relay = threading.Thread(target=Relay_server, args=(PORT,))
-    thread_relay.start()
+      if (client_sock < 0)
+      {
+         cout << "accept error\n";
+      }
+
+      if (current_user == MAX_CLIENT)
+      {
+         cout << "client accept full(max client count : " << MAX_CLIENT << "\n";
+         close(client_sock);
+         continue;
+      }
+
+      if (pthread_create(&thread_client[current_user], NULL, t_function, (void*)& client_sock) != 0)
+      {
+         cout << "Thread create error\n";
+         close(client_sock);
+         continue;
+      }
+      if (client_index >= 10){   // client number over 10 or waiting time over 180 sec then server socket close
+         break;
+      }
+   }
+   // Android client socket connection finish
+   while(client_index != 11){
+      if(client_index==11) break;
+   }
+
+   cout << "\nCurrent Client : " << client_index-1 << "\n";
+   close(server_sock);
+
+
+
+
+   // TSP algorithm
+   double dist[real_user][real_user];   // To save distance calculating result from Android Client
+
+   for (i = 0; i < real_user; i++) {      // make 2dimension array by using calculateDistance function
+      for (j = 0; j < real_user; j++) {
+         if (i == j) dist[i][j] = 0;
+         else {
+            dist[i][j] = calculateDistance(from_user[i].latitude, 
+            from_user[i].longitude, from_user[j].latitude, from_user[j].longitude);
+         }
+      }
+   }
+
+   course = new int[real_user + 1];      // course dynamic memory allocation
+   takeInput(real_user, dist);
+
+    cout << "\n\nDelivery Client order => ";
+   mincost(0, real_user, dist, course); //passing 0 because starting vertex
+    
+   cout << "\nDelivery Drone Zone Path";
+    for(i=0; i < coursenum+1 ; i++){
+        cout << " => " << from_user[course[i]].pointNum;
+    }
+    cout << fixed;
+   cout.precision(2);
+   cout << "\n\nMinimum cost is " << cost << "m\n";
+
+   snddata = makemsg(snddata, targetdata);
+   const char* msg = snddata.c_str();      // convert snddata to char type message
+   // TSP algorithm finish and making path and message done
+
+
+
+
+   // Drone socket connection start
+   if ((server_sock2 = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)      // socket create
+   {
+      cout << "socket create error\n";
+      return -1;
+   }
+
+   if (bind(server_sock2, (struct sockaddr*) & server_addr2, sizeof(server_addr2)) < 0)      // bind
+   {
+      cout << "bind error\n";
+      return -1;
+   }
+
+   if (listen(server_sock2, 5) < 0)      // listen
+   {
+      cout << "listen error\n";
+      return -1;
+   }
+
+   cout << "\n\nWaiting Drone(Pi) Client...\n\n";      // raedy to connect Drone socket
+
+   client_sock2 = accept(server_sock2, (struct sockaddr*) & client_addr2, (socklen_t*)& client_addr_size2);
+   if (client_sock2 < 0)
+   {
+      cout << "accept error\n";
+   }
+
+   if (write(client_sock2, msg, BUFSIZ) <= 0)
+   {
+      printf("Client %d close\n", client_sock2);
+      close(client_sock2);
+   }
+
+   cout << "Send Message : " << msg << "\n\n";
+
+   cout << "\nSucess! Sending Path message to Drone.\n";
+
+   close(client_sock2);
+   close(server_sock2);
+   // end of Socket connection
+   cout <<  "\nDisconnect!! Bye~!\n\n";   // Drone client socket connection finish
+
+   system("python3 ./imgProcessing_ser.py");
+
+   return 0;
+}
+
+double toRad(double degree) {
+   return degree / 180 * pi;
+}
+
+// Indoor virture location(x, y) lat = Latitude(x), long = longitude(y)
+double calculateDistance(double lat1, double long1, double lat2, double long2) {
+   double dist;
+   dist = sin(toRad(lat1)) * sin(toRad(lat2)) + cos(toRad(lat1)) * cos(toRad(lat2)) * cos(toRad(long2 - long1));
+   dist = acos(dist);
+   //   dist = (6371 * pi * dist) / 180;
+   //   got dist in radian, no need to change back to degree and convert to rad again.
+   dist = 6371000 * dist;
+   return dist;
+}
+
+void takeInput(int points, double cordinates[real_user][real_user])      // points : service requesting user number, cordinates : TSP 2dimension array by using point
+{
+   int i, j;
+   int n = points;
+    cout << fixed;
+   cout.precision(2);
+   
+    cout << "\nThe number of points(Included Home Point) : " << points << "\n";
+
+   cout << "\nTSP Cost Matrix\n";
+   for (i = 0; i < n; i++) {
+      for (j = 0; j < n; j++) {
+         cout.setf(ios::right);
+         cout << setw(8) << cordinates[i][j] << "m";
+      }
+      cout << "\n";
+
+      completed[i] = 0;
+   }
+}
+
+double least(int c, int points, double cordinates[real_user][real_user])
+{
+   int i, nc = 999;
+   int min = 999;
+   double kmin;
+   int n = points;
+
+   for (i = 0; i < n; i++)
+   {
+      if ((cordinates[c][i] != 0) && (completed[i] == 0))
+         if (cordinates[c][i] + cordinates[i][c] < min)
+         {
+            min = cordinates[i][c] + cordinates[c][i];
+            kmin = cordinates[c][i];
+            nc = i;
+         }
+   }
+
+   if (min != 999)
+      cost += kmin;
+
+   return nc;
+}
+
+void mincost(int city, int points, double cordinates[real_user][real_user], int* course)
+{
+   int i, ncity;
+
+   completed[city] = 1;
+
+   cout << city << " ---> ";
+
+   course[coursenum] = city;
+   coursenum++;
+
+   ncity = least(city, points, cordinates);
+
+   if (ncity == 999)
+   {
+      ncity = 0;
+      cout << ncity;
+      cost += cordinates[city][ncity];
+
+      return;
+   }
+
+   mincost(ncity, points, cordinates, course);
+}
+
+string makemsg(string snddata, struct Target targetdata[]) {
+   int i, j;
+
+   for (i = 0; i < coursenum; i++) {
+      for (j = 0; j < 21; j++) {
+        if (course[i] == atoi((targetdata + j)->pointNum)) {
+            snddata.append(to_string((targetdata + j)->latitude));
+            snddata.append("/");
+            snddata.append(to_string((targetdata + j)->longitude));
+            snddata.append("/");
+            break;
+         }
+      }
+   }
+
+   snddata.append(to_string((targetdata + 0)->latitude));
+   snddata.append("/");
+   snddata.append(to_string((targetdata + 0)->longitude));
+   snddata.append("/");
+
+   return snddata;
+}
+
+void* t_function(void* arg)
+{
+   cout << fixed;
+   cout.precision(6);
+
+   int client_sock = *((int*)arg);
+   pid_t pid = getpid();      // process id
+   pthread_t tid = pthread_self();  // thread id
+
+   cout << "\nAndroid User Conecction Successfully!!\n";
+   char clientpoint[BUFSIZ] = "\0";
+   int i=0;
+
+   memset(clientpoint, 0x00, BUFSIZ);
+   // compare and copy data to put and calculate TSP algorithm
+   if (client_index < 11) {
+      (read(client_sock, clientpoint, BUFSIZ));
+      i = client_index;   // to save client index while client thraed function run
+      for (int cnt = 0; cnt < 21; cnt++) {
+         if (strcmp(clientpoint, targetdata[cnt].pointNum) == 0) {   // comparing from_user and targetdata
+            from_user[i].pointNum = targetdata[cnt].pointNum;
+            from_user[i].latitude = targetdata[cnt].latitude;
+            from_user[i].longitude = targetdata[cnt].longitude;
+            char buf[512] = {"Booking complete! Thank you!"};
+            (write(client_sock, buf, sizeof(buf)));
+            client_index++;   // add current service requesting client index
+            break;
+         }
+      }
+   }
+   else {
+      read(client_sock, clientpoint, BUFSIZ);
+      char buf[512] = {"Reservation is fulled! Wait for next delivery"};
+      (write(client_sock, buf, sizeof(buf)));
+      close(client_sock);
+      }
+
+   cout << "*****Client " << i << "*****\nDrone Zone : " << from_user[i].pointNum
+   << ",   Latitude : " << from_user[i].latitude << ",   Longitude : " << from_user[i].longitude << "\n";
+   cout << "pid : " << (unsigned int)pid << ", tid : " << (unsigned int)tid << "\n";
+   cout << "Client " << i << " close\n\n";
+   close(client_sock);
+}
