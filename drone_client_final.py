@@ -15,8 +15,8 @@ client_index = 11  # the number of client. Add 1 to use path information(for Hom
 
 # socket connection address and port for HPC TSP server
 # get shortest path data from HPC TSP server
-SERVER_IP = '10.100.201.132'  # HPC TSP server IP
-SERVER_PORT = 10002
+SERVER_IP = '116.89.189.55'  # HPC TSP server IP
+SERVER_PORT = 22042
 SIZE = 512
 SERVER_ADDR = (SERVER_IP, SERVER_PORT)
 
@@ -28,8 +28,8 @@ SIZE = 512
 SERVER_ADDR2 = (SERVER_IP2, SERVER_PORT2)
 
 # to send drone cam image to HPC image processing server
-SERVER_IP3 = '10.100.201.132'   # HPC Image Processing server IP
-SERVER_PORT3 = 10003
+SERVER_IP3 = '116.89.189.55'   # HPC Image Processing server IP
+SERVER_PORT3 = 22043
 
 num = 0  # To make path
 locations = []
