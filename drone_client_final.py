@@ -27,8 +27,8 @@ SERVER_PORT2 = 22044
 SIZE = 512
 SERVER_ADDR2 = (SERVER_IP2, SERVER_PORT2)
 
-# to send drone cam image to HPC image processing server
-SERVER_IP3 = '116.89.189.55'   # HPC Image Processing server IP
+# to send drone cam image to Koren VM image processing server
+SERVER_IP3 = '116.89.189.55'   # Koren VM Image Processing server IP
 SERVER_PORT3 = 22043
 
 num = 0  # To make path
