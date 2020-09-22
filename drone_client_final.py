@@ -14,7 +14,6 @@ import RPi.GPIO as GPIO     # RaspberryPi lib
 import sys
 
 client_index = 11  # the number of client. Add 1 to use path information(for Home base and to return)
-num = 0  # To make path
 msgTo_web = []
 locationsTo_Web = []
 
@@ -301,15 +300,15 @@ def send_Logdata_toWebserver(sock):
         msgTo_webserver("Connect Drone to Web Server!\n\n")
         msgTo_webserver(locationsTo_Web)
 
-        num2 = 0  # Current Target point to send Server
+        num = 0  # Current Target point to send Server
 
         msgTo_webserver('Start to move')  # convert num to string type     send 1 to server
 
         # 1  start Drone delivery.    The number of point(including Home base) : 12
-        while num2 < client_index + 1:  # loop 12 times, manipulate it when you test this system
-            num2 = num2 + 1     # to move first(1) point
-            drone_fly(latitude[num2], longitude[num2])
-            point = (latitude[num2] + '/' + longitude[num2])
+        while num < client_index + 1:  # loop 12 times, manipulate it when you test this system
+            num = num + 1     # to move first(1) point
+            drone_fly(latitude[num], longitude[num])
+            point = (latitude[num] + '/' + longitude[num])
             point = str(point)
             msgTo_webserver(point)
             time.sleep(3)
