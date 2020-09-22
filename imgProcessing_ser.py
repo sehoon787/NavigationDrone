@@ -96,7 +96,7 @@ def recv(sock):                 # 데이터 수신 함수
             serverSocket.close()
             toWeb.close()
             print("Socket close!!")
-            sys.exit(0)
+            sys.exit()
             break
 
 if __name__=="__main__":
