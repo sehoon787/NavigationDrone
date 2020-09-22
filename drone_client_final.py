@@ -375,6 +375,10 @@ if __name__=="__main__":
     # Web Server Thread
     sendLog = threading.Thread(target=send_Logdata_toWebserver, args=(Web_clientSocket,))
 
+    sendImg.daemon = True
+    receiver.daemon = True
+    sendLog.daemon = True
+
     ##  Start Thread
     # HPC Image Processing Server Thread
     sendImg.start()
