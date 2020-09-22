@@ -21,7 +21,7 @@ HOST = ''
 PORT = 22043    # to get image from Drone
 
 # then this program is client to send image to Web Server
-WebSERVER_IP = '116.89.189.55'  # HPC TSP server IP
+WebSERVER_IP = '192.168.0.2'  # HPC TSP server IP
 PORT2 = 22044   # to send image to Web(10004 external port)
 
 def Relay_server(port):
@@ -49,13 +49,16 @@ def Relay_server(port):
             # Connect, conn : socket object, addr : binding address
             conn, addr = s.accept()
 
+            global msg_to_drone
+            cX = 0
+            cY = 0
             while True:
                 # stringData size from client (==(str(len(stringData))).encode().ljust(16))
                 length = recvall(conn, 16)
                 stringData = recvall(conn, int(length))
                 data = np.fromstring(stringData, dtype='uint8')
 
-                toWeb.sendall((str(len(stringData))).encode().ljust(16) + stringData)   # send image to Web server
+                toWeb.sendall((str(len(stringData))).encode().ljust(16) + stringData)  # send image to Web server
 
                 # Decode data
                 frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
@@ -72,15 +75,46 @@ def Relay_server(port):
 
                 # Iterate through contours and filter by the number of vertices
                 for c in cnts:
-                    perimeter = cv2.arcLength(c, True)
-                    approx = cv2.approxPolyDP(c, 0.04 * perimeter, True)
-                    if len(approx) > 5:
-                        cv2.drawContours(original, [c], -1, (36, 255, 12), -1)
+                    # compute the center of the contour
+                    M = cv2.moments(c)
+                    try:
+                        cX = int(M["m10"] / M["m00"])
+                        cY = int(M["m01"] / M["m00"])
+                    except ZeroDivisionError:
+                        print("")
 
-                cv2.imshow('mask', mask)
-                cv2.imshow('original', original)
-                cv2.imwrite('../../mask.png', mask)
-                cv2.imwrite('../../original.png', original)
+                    '''    
+                    # draw the contour and center of the shape on the image
+                    # using mask is better for speed
+                    cv2.drawContours(original, [c], -1, (0, 255, 0), 2)
+                    cv2.circle(original, (cX, cY), 7, (255, 255, 255), -1)
+                    if (cX >= 350 and cX <= 850) and (cY >= 200 and cY <= 600):
+                        cv2.putText(mask, "center", (cX - 20, cY - 20),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    else:
+                        cv2.putText(mask, "Out of Target", (cX - 20, cY - 20),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    '''
+
+                    # better for watching
+                    cv2.drawContours(original, [c], -1, (0, 255, 0), 2)
+                    cv2.circle(original, (cX, cY), 7, (255, 255, 255), -1)
+
+                    if (cX >= 350 and cX <= 850) and (cY >= 200 and cY <= 600):
+                        cv2.putText(original, "Center", (cX - 20, cY - 20),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                        print("X : " + str(cX) + ", Y : " + str(cY))
+                        msg_to_drone = "Center"
+                        print(msg_to_drone)
+                    else:
+                        cv2.putText(original, "Out of Target", (cX - 20, cY - 20),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                        print("X : " + str(cX) + ", Y : " + str(cY))
+                        msg_to_drone = "Out of Target"
+                        print(msg_to_drone)
+
+                # cv2.imshow("mask", mask)
+                cv2.imshow("original", original)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
