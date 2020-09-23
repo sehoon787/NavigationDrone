@@ -100,6 +100,8 @@ def recv(sock):                 # 데이터 수신 함수
             break
 
 if __name__=="__main__":
+  
+    print("Start Image processing Server")
 
     # then this program is client to send image to Web Server
     WebSERVER_IP = '192.168.0.2'  # HPC TSP server IP
