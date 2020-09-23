@@ -14,8 +14,8 @@ import RPi.GPIO as GPIO     # RaspberryPi lib
 import sys
 
 client_index = 11  # the number of client. Add 1 to use path information(for Home base and to return)
-msgTo_web = []
-locationsTo_Web = []
+msgTo_web = ""
+locationsTo_Web = ""    # to send TSP path to Web server
 
 latitude = []
 longitude = []
@@ -40,35 +40,33 @@ def get_TSP_path():
     global locationsTo_Web
     #   To get shortest visiting path by using HPC TSP algorithm and point
     #   Client socket connection to HPC TSP Server
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tsp_client_socket:
-        tsp_client_socket.connect(TSP_SERVER_ADDR)  # connect to server
-        msg = tsp_client_socket.recv(256)  # get message from server
+    msg = tsp_client_socket.recv(256)  # get message from server
 
-        print("Connect Drone to HPC Server!")
+    print("Connect Drone to HPC Server!")
 
-        msg = str(msg)
-        locations = msg.split('\'')
-        locations = locations[1]
-        locations = locations.split('\\')
-        locations = locations[0]
-        locationsTo_Web = locations  # Shortest path for delivery drone
-        locations = locations.split('/')
-        locations.pop()
-        locations = list(map(float, locations))
-        print("Path from server : {}".format(locations))  # print message from server
+    msg = str(msg)
+    locations = msg.split('\'')
+    locations = locations[1]
+    locations = locations.split('\\')
+    locations = locations[0]
+    locationsTo_Web = locations  # Shortest path for delivery drone
+    locations = locations.split('/')
+    locations.pop()
+    locations = list(map(float, locations))
+    print("Path from server : {}".format(locations))  # print message from server
 
-        # to make path
-        i = 0
-        for i in range(len(locations)):
-            if i % 2 == 0:
-                latitude.append(locations[i])
-            else:
-                longitude.append(locations[i])
+    # to make path
+    i = 0
+    for i in range(len(locations)):
+        if i % 2 == 0:
+            latitude.append(locations[i])
+        else:
+            longitude.append(locations[i])
 
-        for i in range(len(latitude)):
-            print('latitude[', i, '] : ', latitude[i], '\tlongitude[', i, '] : ', longitude[i])
+    for i in range(len(latitude)):
+        print('latitude[', i, '] : ', latitude[i], '\tlongitude[', i, '] : ', longitude[i])
 
-        tsp_client_socket.close()
+    tsp_client_socket.close()
 
 # get distance from obstacle to Drone by using sonar sensor
 ## not thread
@@ -288,8 +286,9 @@ def recv_from_HPCimg_server(sock):
 
 
 def msgTo_webserver(msg_to_web):  # make message to HPC image processing server
-    msgTo_web.insert(0, msg_to_web)
-    Web_clientSocket.send(msgTo_web[0].encode('utf-8'))
+    global msgTo_web
+    msgTo_web = str(msg_to_web)
+    Web_clientSocket.send(msgTo_web.encode("utf-8"))
     print(msgTo_web)
 ## Thread 3
 # Move drone for TSP path and send log data to Web
@@ -345,17 +344,17 @@ if __name__=="__main__":
     TSP_SERVER_IP = '116.89.189.55'  # HPC TSP server IP
     TSP_SERVER_PORT = 22042
     SIZE = 512
-    TSP_SERVER_ADDR = (TSP_SERVER_IP, TSP_SERVER_PORT)
+    tsp_client_socket = socket(AF_INET, SOCK_STREAM)
+    tsp_client_socket.connect((TSP_SERVER_IP, TSP_SERVER_PORT))
     # to get TSP path from HPC TSP server
     get_TSP_path()
-
 
     ######## Start flying Drone ########
 
     ## HPC Image processing Server
     # send drone cam image to HPC image processing server and get landing data from HPC server
     IMG_SERVER_IP = "10.100.201.136"   # Koren VM Image Processing server IP
-    IMG_SERVER_PORT = 10011    # HPC external port 22044
+    IMG_SERVER_PORT = 10010    # HPC external port 22043
     HPC_clientSocket = socket(AF_INET, SOCK_STREAM)
     HPC_clientSocket.connect((IMG_SERVER_IP, IMG_SERVER_PORT))
 
