@@ -21,7 +21,7 @@ def recvall(sock, count):
 def send(sock):                 # 데이터 송신 함수
     while True:
         sock.send(msg_to_drone.encode("utf-8"))
-        time.sleep(3)
+        time.sleep(1)
 
 def recv(sock):                 # 데이터 수신 함수
     global msg_to_drone
