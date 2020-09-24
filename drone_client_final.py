@@ -266,7 +266,7 @@ def drone_land(lati, longi, land_point):
                         msgTo_webserver("(L)Reached target altitude")
                         break
                     time.sleep(1)
-            elif i<=1:
+            elif vehicle.location.global_relative_frame.alt<=1:
                 msgTo_web("(L)Set General Landing Mode")
                 vehicle.mode = VehicleMode("LAND")
                 time.sleep(1)
