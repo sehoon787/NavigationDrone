@@ -82,10 +82,10 @@ def recv(sock):                 # 데이터 수신 함수
                 msg_to_drone = "Center"
                 print(msg_to_drone)
             else:
-                cv2.putText(original, "Out of Target", (cX - 20, cY - 20),
+                cv2.putText(original, "Out", (cX - 20, cY - 20),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 print("X : " + str(cX) + ", Y : " + str(cY))
-                msg_to_drone = "Out of Target"
+                msg_to_drone = "Out"
                 print(msg_to_drone)
 
         # cv2.imshow("mask", mask)
@@ -100,7 +100,7 @@ def recv(sock):                 # 데이터 수신 함수
             break
 
 if __name__=="__main__":
-  
+
     print("Start Image processing Server")
 
     # then this program is client to send image to Web Server
