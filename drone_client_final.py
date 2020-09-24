@@ -327,6 +327,7 @@ def recv_from_HPCimg_server(sock):
         data = HPC_clientSocket.recv(1024)
         land_point = data.decode("utf-8")
         print("Target Detect : ", land_point)
+        time.sleep(1)
 
 
 def msgTo_webserver(msg_to_web):  # make message to HPC image processing server
