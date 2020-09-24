@@ -16,6 +16,7 @@ import sys
 client_index = 11  # the number of client. Add 1 to use path information(for Home base and to return)
 msgTo_web = ""
 locationsTo_Web = ""    # to send TSP path to Web server
+land_point = ""
 
 latitude = []
 longitude = []
@@ -185,15 +186,17 @@ def to_quaternion(roll=0.0, pitch=0.0, yaw=0.0):
 
     return [w, x, y, z]
 def drone_fly(lati, longi):
-    msgTo_webserver("Take off!")
+    global land_point
+
+    msgTo_webserver("(Go)Take off!")
     arm_and_takeoff(2)  # take off altitude 2M
 
     i = 4  # start altitude to move 4M
 
-    msgTo_webserver("Set default/target airspeed to 3")
+    msgTo_webserver("(Go)Set default/target airspeed to 3")
     vehicle.airspeed = 3
 
-    msgTo_webserver("Angle Positioning and move toward")  # move to next point
+    msgTo_webserver("(Go)Angle Positioning and move toward")  # move to next point
 
     starttime = time.time()
     flytime = 0
@@ -202,22 +205,22 @@ def drone_fly(lati, longi):
     while flytime <= 40:
 
         if dist <= 300 and dist >= 100:  # 3M from obstacle
-            msgTo_webserver("Detect Obstacle")
+            msgTo_webserver("(Go)Detect Obstacle")
 
             i = i + 1
 
             while True:
-                msgTo_webserver(" Altitude: ", vehicle.location.global_relative_frame.alt)
+                msgTo_webserver("(Go)Altitude: ", vehicle.location.global_relative_frame.alt)
                 # Break and return from function just below target altitude.
                 send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                      yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
                                      thrust=0.6)
                 if vehicle.location.global_relative_frame.alt >= i * 0.95:
-                    msgTo_webserver("Reached target altitude")
+                    msgTo_webserver("(Go)Reached target altitude")
                     break
                 time.sleep(1)
         else:
-            msgTo_webserver("Go Forward")
+            msgTo_webserver("(Go)Go Forward")
             loc_point = LocationGlobalRelative(lati, longi, i)
             vehicle.simple_goto(loc_point, groundspeed=1)
             # Send a new target every two seconds
@@ -226,17 +229,56 @@ def drone_fly(lati, longi):
 
         dist = distance()
         if dist >= 100:
-            msgTo_webserver("Distance from Obstacle : " + str(dist))
+            msgTo_webserver("(Go)Distance from Obstacle : " + str(dist))
         flytime = time.time() - starttime
 
-    msgTo_webserver("Setting LAND mode...")
-    vehicle.mode = VehicleMode("LAND")
-    time.sleep(1)
+    #msgTo_web("(L)Set General Landing Mode")
+    #vehicle.mode = VehicleMode("LAND")
+    #time.sleep(1)
+    drone_land(lati, longi, land_point)     # image processing landing
 
-    msgTo_webserver("Close vehicle object")
+    msgTo_webserver("(Go)Close vehicle object")
     vehicle.close()
-    msgTo_webserver("Ready to leave to next Landing Point")
+    msgTo_webserver("(Go)Ready to leave to next Landing Point")
+def drone_land(lati, longi, land_point):
+        msgTo_webserver("(L)Setting Landing Mode!")
 
+        vehicle.airspeed = 1
+        msgTo_webserver("(L)Set airspeed 1m/s")
+
+        find_point = str(land_point)
+
+        i = vehicle.location.global_relative_frame.alt  # current altitude
+
+        while True:
+            if find_point == "Center":  # i M from Landing point
+                msgTo_web("(L)Set Precision Landing Mode(Center)")
+
+                i = i - 1
+
+                while True:
+                    msgTo_webserver("(L)Altitude: ", vehicle.location.global_relative_frame.alt)
+                    # Break and return from function just below target altitude.
+                    send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
+                                         yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
+                                         thrust=0.4)
+                    if vehicle.location.global_relative_frame.alt >= i * 0.95:
+                        msgTo_webserver("(L)Reached target altitude")
+                        break
+                    time.sleep(1)
+            elif i<=1:
+                msgTo_web("(L)Set General Landing Mode")
+                vehicle.mode = VehicleMode("LAND")
+                time.sleep(1)
+                break
+            else:
+                msgTo_webserver("(L)Finding Landing Point Target")
+                msgTo_webserver("(L)Altitude: ", vehicle.location.global_relative_frame.alt)
+                loc_point = LocationGlobalRelative(lati, longi, i)
+                vehicle.simple_goto(loc_point, groundspeed=1)
+                # Send a new target every two seconds
+                # For a complete implementation of follow me you'd want adjust this delay
+                time.sleep(1)
 
 
 # Using thread to connect HPC image processing server and Web server
@@ -280,9 +322,11 @@ def send_To_HPCimg_server(sock):
         HPC_clientSocket.close()
 ## Thread 2
 def recv_from_HPCimg_server(sock):
+    global land_point
     while True:
         data = HPC_clientSocket.recv(1024)
-        print("Target Range : ", data.decode("utf-8"))
+        land_point = data.decode("utf-8")
+        print("Target Detect : ", land_point)
 
 
 def msgTo_webserver(msg_to_web):  # make message to HPC image processing server
