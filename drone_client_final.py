@@ -243,8 +243,8 @@ def drone_fly(lati, longi):
 def drone_land(lati, longi, land_point):
         msgTo_webserver("(L)Setting Landing Mode!")
 
-        vehicle.airspeed = 1
         msgTo_webserver("(L)Set airspeed 1m/s")
+        vehicle.airspeed = 1
 
         find_point = str(land_point)
 
