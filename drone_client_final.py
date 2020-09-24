@@ -14,7 +14,6 @@ import RPi.GPIO as GPIO     # RaspberryPi lib
 import sys
 
 client_index = 11  # the number of client. Add 1 to use path information(for Home base and to return)
-msgTo_web = ""
 locationsTo_Web = ""    # to send TSP path to Web server
 land_point = "Center"
 
@@ -334,7 +333,6 @@ def recv_from_HPCimg_server(sock):
 
 
 def msgTo_webserver(msg_to_web):  # make message to HPC image processing server
-    global msgTo_web
     msgTo_web = str(msg_to_web)
     Web_clientSocket.send(msgTo_web.encode("utf-8"))
     print(msgTo_web)
@@ -353,21 +351,19 @@ def send_Logdata_toWebserver(sock):
 
         # 1  start Drone delivery.    The number of point(including Home base) : 12
         while num < client_index + 1:  # loop 12 times, manipulate it when you test this system
+            vehicle = connect('/dev/ttyAMA0', wait_ready=True, baud=57600)
+            msgTo_webserver("Vehicle Connect!")
             num = num + 1     # to move first(1) point
             drone_fly(latitude[num], longitude[num])
             point = (latitude[num] + '/' + longitude[num])
-            point = str(point)
             msgTo_webserver(point)
-            time.sleep(3)
-            vehicle = connect('/dev/ttyAMA0', wait_ready=True, baud=57600)
-            msgTo_webserver("Connect Restart!")
+            time.sleep(1)
 
         # 2(Finish Drone delivery)
-        vehicle.close()
         msgTo_webserver("Completed to Base")
         msgTo_webserver("Finish")
 
-        msgTo_web("arrive")
+        msgTo_webserver("arrive")
         Web_clientSocket.close()  # close socket connection
 
         ### End Drone Delivery System
