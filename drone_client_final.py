@@ -31,7 +31,7 @@ GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 GPIO.setup(GPIO_ECHO, GPIO.IN)
 
 vehicle = connect('/dev/ttyAMA0', wait_ready=True, baud=57600)
-print("Drone Connect")
+print("Vehicle Connect")
 
 
 # get TSP path from TSP HCP server
@@ -256,7 +256,7 @@ def drone_land(lati, longi, land_point):
             i = i - 1
 
             if find_point == "Center":  # i M from Landing point
-                msgTo_web("(L)Set Precision Landing Mode(Center)")
+                msgTo_webserver("(L)Set Precision Landing Mode(Center)")
 
                 while True:
                     msgTo_webserver("(L)Altitude: ", vehicle.location.global_relative_frame.alt)
@@ -269,7 +269,7 @@ def drone_land(lati, longi, land_point):
                         break
                     time.sleep(1)
             elif vehicle.location.global_relative_frame.alt<=1:
-                msgTo_web("(L)Set General Landing Mode")
+                msgTo_webserver("(L)Set General Landing Mode")
                 vehicle.mode = VehicleMode("LAND")
                 time.sleep(1)
                 break
@@ -351,16 +351,19 @@ def send_Logdata_toWebserver(sock):
 
         # 1  start Drone delivery.    The number of point(including Home base) : 12
         while num < client_index + 1:  # loop 12 times, manipulate it when you test this system
-            vehicle = connect('/dev/ttyAMA0', wait_ready=True, baud=57600)
-            msgTo_webserver("Vehicle Connect!")
             num = num + 1     # to move first(1) point
             drone_fly(latitude[num], longitude[num])
             point = (latitude[num] + '/' + longitude[num])
             msgTo_webserver(point)
             time.sleep(1)
+            if num < client_index:
+                vehicle = connect('/dev/ttyAMA0', wait_ready=True, baud=57600)
+                msgTo_webserver("Vehicle Connect!")
+            else:
+                msgTo_webserver("Return To Base")
 
         # 2(Finish Drone delivery)
-        msgTo_webserver("Completed to Base")
+        msgTo_webserver("Completed to Delivery")
         msgTo_webserver("Finish")
 
         msgTo_webserver("arrive")
