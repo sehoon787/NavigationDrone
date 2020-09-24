@@ -16,7 +16,7 @@ import sys
 client_index = 11  # the number of client. Add 1 to use path information(for Home base and to return)
 msgTo_web = ""
 locationsTo_Web = ""    # to send TSP path to Web server
-land_point = ""
+land_point = "Center"
 
 latitude = []
 longitude = []
@@ -235,6 +235,8 @@ def drone_fly(lati, longi):
     #msgTo_web("(L)Set General Landing Mode")
     #vehicle.mode = VehicleMode("LAND")
     #time.sleep(1)
+
+    time.sleep(3)
     drone_land(lati, longi, land_point)     # image processing landing
 
     msgTo_webserver("(Go)Close vehicle object")
@@ -251,10 +253,11 @@ def drone_land(lati, longi, land_point):
         i = vehicle.location.global_relative_frame.alt  # current altitude
 
         while True:
+
+            i = i - 1
+
             if find_point == "Center":  # i M from Landing point
                 msgTo_web("(L)Set Precision Landing Mode(Center)")
-
-                i = i - 1
 
                 while True:
                     msgTo_webserver("(L)Altitude: ", vehicle.location.global_relative_frame.alt)
@@ -278,7 +281,7 @@ def drone_land(lati, longi, land_point):
                 vehicle.simple_goto(loc_point, groundspeed=1)
                 # Send a new target every two seconds
                 # For a complete implementation of follow me you'd want adjust this delay
-                time.sleep(1)
+                time.sleep(3)
 
 
 # Using thread to connect HPC image processing server and Web server
@@ -360,6 +363,7 @@ def send_Logdata_toWebserver(sock):
             msgTo_webserver("Connect Restart!")
 
         # 2(Finish Drone delivery)
+        vehicle.close()
         msgTo_webserver("Completed to Base")
         msgTo_webserver("Finish")
 
