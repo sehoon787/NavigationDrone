@@ -29,8 +29,8 @@ def recv(sock):                 # 데이터 수신 함수
     cY = 0
     while True:
         # stringData size from client (==(str(len(stringData))).encode().ljust(16))
-        length = recvall(connectionSocket, 16)
-        stringData = recvall(connectionSocket, int(length))
+        length = recvall(sock, 16)
+        stringData = recvall(sock, int(length))
         data = np.fromstring(stringData, dtype='uint8')
 
         toWeb.sendall((str(len(stringData))).encode().ljust(16) + stringData)  # send image to Web server
@@ -93,11 +93,10 @@ def recv(sock):                 # 데이터 수신 함수
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
+            connectionSocket.close()
             serverSocket.close()
             toWeb.close()
             print("Socket close!!")
-            connectionSocket.close()
-            serverSocket.close()
             break
 
 if __name__=="__main__":
