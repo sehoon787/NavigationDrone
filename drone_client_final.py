@@ -216,7 +216,6 @@ def drone_fly(lati, longi):
                                      thrust=0.6)
                 if vehicle.location.global_relative_frame.alt >= i * 0.95:
                     msgTo_webserver("(Go)Reached target altitude")
-                    dist = distance()
                     break
                 time.sleep(1)
         else:
@@ -225,9 +224,9 @@ def drone_fly(lati, longi):
             vehicle.simple_goto(loc_point, groundspeed=1)
             # Send a new target every two seconds
             # For a complete implementation of follow me you'd want adjust this delay
-            dist = distance()
             time.sleep(1)
 
+        dist = distance()
         if dist >= 100:
             msgTo_webserver("(Go)Distance from Obstacle : " + str(dist))
         flytime = time.time() - starttime
@@ -321,8 +320,10 @@ def send_To_HPCimg_server(sock):
         print("Socket Close!!")
         cam.release()
         HPC_clientSocket.close()
+        socket.close()
     finally:
         HPC_clientSocket.close()
+        socket.close()
 ## Thread 2
 def recv_from_HPCimg_server(sock):
     global land_point
@@ -381,8 +382,10 @@ def send_Logdata_toWebserver(sock):
         msgTo_webserver("Close vehicle object")
         vehicle.close()
         Web_clientSocket.close()
+        socket.close()
     finally:
         Web_clientSocket.close()
+        socket.close()
 
 
 
@@ -437,6 +440,6 @@ if __name__=="__main__":
     while True:
         time.sleep(0)   # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌(1 일때)
         pass            # sleep(0)은 cpu 선점권을 풀지 않음
-
+    
     HPC_clientSocket.close()
     Web_clientSocket.close()
