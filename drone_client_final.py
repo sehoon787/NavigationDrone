@@ -197,10 +197,10 @@ def drone_fly(lati, longi):
 
     msgTo_webserver("(Go)Angle Positioning and move toward")  # move to next point
 
-    starttime = time.time()
-    flytime = 0
-    dist = 10000
+    dist = 1000
 
+    starttime=time.time()
+    flytime=0
     while flytime <= 40:
 
         if dist <= 300 and dist >= 100:  # 3M from obstacle
@@ -216,6 +216,7 @@ def drone_fly(lati, longi):
                                      thrust=0.6)
                 if vehicle.location.global_relative_frame.alt >= i * 0.95:
                     msgTo_webserver("(Go)Reached target altitude")
+                    dist = distance()
                     break
                 time.sleep(1)
         else:
@@ -224,9 +225,9 @@ def drone_fly(lati, longi):
             vehicle.simple_goto(loc_point, groundspeed=1)
             # Send a new target every two seconds
             # For a complete implementation of follow me you'd want adjust this delay
+            dist = distance()
             time.sleep(1)
 
-        dist = distance()
         if dist >= 100:
             msgTo_webserver("(Go)Distance from Obstacle : " + str(dist))
         flytime = time.time() - starttime
