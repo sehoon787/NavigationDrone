@@ -153,7 +153,5 @@ if __name__=="__main__":
     except socket.error:  # when socket connection failed
         print("Web Socket close!!")
         toWeb.close()
-        socket.close()
     finally:
         toWeb.close()
-        socket.close()
