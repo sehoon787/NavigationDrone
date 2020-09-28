@@ -104,6 +104,7 @@ if __name__=="__main__":
 
     print("Start Image processing Server")
 
+    ## here, Client role
     # then this program is client to send image to Web Server
     WebSERVER_IP = '192.168.0.2'  # HPC TSP server IP
     WebSERVER_PORT = 22044  # to send image to Web(10004 external port)
@@ -114,17 +115,18 @@ if __name__=="__main__":
         toWeb.connect((WebSERVER_IP, WebSERVER_PORT))
         print("Connect to Web!")
 
+        ## here, Server role
         # HPC Server socket for Drone Client
         host = "192.168.0.6"
         port = 22043
 
         serverSocket = socket(AF_INET, SOCK_STREAM)
-        serverSocket.bind((host,port))
+        serverSocket.bind((host, port))
         serverSocket.listen(1)
         print("Waiting Drone Client...")
 
         try:
-            connectionSocket,addr = serverSocket.accept()
+            connectionSocket, addr = serverSocket.accept()
 
             # send to Web Server
             sender = threading.Thread(target=send, args=(connectionSocket,))
