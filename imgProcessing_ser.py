@@ -144,8 +144,10 @@ if __name__=="__main__":
             # When everything is done, release the capture
             cv2.destroyAllWindows()
             print("Drone Socket close!!")
+            connectionSocket.close()
             serverSocket.close()
         finally:
+            connectionSocket.close()
             serverSocket.close()
 
     except socket.error:  # when socket connection failed
