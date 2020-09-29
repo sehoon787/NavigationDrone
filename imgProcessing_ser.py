@@ -132,9 +132,6 @@ if __name__=="__main__":
             # send Landind Point information to Drone Client
             receiever = threading.Thread(target=recv, args=(connectionSocket,))
 
-            sender.daemon = True
-            receiever.daemon = True
-
             sender.start()
             receiever.start()
 
