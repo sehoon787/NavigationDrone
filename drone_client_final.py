@@ -251,6 +251,7 @@ def drone_land(lati, longi, land_point):
         msgTo_webserver("(L)Set airspeed 1m/s")
         vehicle.airspeed = 1
 
+        print("Target Detect : ", land_point)
         find_point = str(land_point)
 
         i = vehicle.location.global_relative_frame.alt  # current altitude
@@ -263,7 +264,7 @@ def drone_land(lati, longi, land_point):
                 msgTo_webserver("(L)Set Precision Landing Mode(Center)")
 
                 while True:
-                    msgTo_webserver("(L)Altitude: ", vehicle.location.global_relative_frame.alt)
+                    msgTo_webserver("(L)Altitude :", vehicle.location.global_relative_frame.alt)
                     # Break and return from function just below target altitude.
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
@@ -279,7 +280,7 @@ def drone_land(lati, longi, land_point):
                 break
             else:
                 msgTo_webserver("(L)Finding Landing Point Target")
-                msgTo_webserver("(L)Altitude: ", vehicle.location.global_relative_frame.alt)
+                msgTo_webserver("(L)Altitude :", vehicle.location.global_relative_frame.alt)
                 loc_point = LocationGlobalRelative(lati, longi, i)
                 vehicle.simple_goto(loc_point, groundspeed=1)
                 # Send a new target every two seconds
@@ -332,7 +333,6 @@ def recv_from_HPCimg_server(sock):
     while True:
         data = HPC_clientSocket.recv(1024)
         land_point = data.decode("utf-8")
-        print("Target Detect : ", land_point)
         time.sleep(1)
 
 
@@ -401,42 +401,47 @@ if __name__=="__main__":
     tsp_client_socket.connect((TSP_SERVER_IP, TSP_SERVER_PORT))
     # to get TSP path from HPC TSP server
     get_TSP_path()
+    time.sleep(5)
+
 
     ######## Start flying Drone ########
 
-    ## HPC Image processing Server
+    ## HPC Image processing Server(Image)
     # send drone cam image to HPC image processing server and get landing data from HPC server
-    IMG_SERVER_IP = "10.100.201.136"   # Koren VM Image Processing server IP
-    IMG_SERVER_PORT = 10010    # HPC external port 22043
+    IMG_SERVER_IP = "192.168.0.6"   # Koren VM Image Processing server IP
+    IMG_SERVER_PORT = 22043    # HPC external port 22043
     HPC_clientSocket = socket(AF_INET, SOCK_STREAM)
     HPC_clientSocket.connect((IMG_SERVER_IP, IMG_SERVER_PORT))
 
-    ## Web Server
-    # send drone log(altitude, arrive point point etc..) to Web server
-    Web_SERVER_IP = "116.89.189.55"  # koren SDI VM IP
-    Web_SERVER_PORT = 22044
-    Web_clientSocket = socket(AF_INET, SOCK_STREAM)
-    Web_clientSocket.connect((Web_SERVER_IP, Web_SERVER_PORT))
+
+    try:
+        ## Web Server(Log)
+        # send drone log(altitude, arrive point point etc..) to Web server
+        Web_SERVER_IP = "192.168.0.6"  # koren SDI VM IP
+        Web_SERVER_PORT = 22044
+        Web_clientSocket = socket(AF_INET, SOCK_STREAM)
+        Web_clientSocket.connect((Web_SERVER_IP, Web_SERVER_PORT))
+
+        try:
+            ##   Declare Thread
+            # Web Server Thread
+            sendLog = threading.Thread(target=send_Logdata_toWebserver, args=(Web_clientSocket,))
+            # HPC Image Processing Server Thread
+            sendImg = threading.Thread(target=send_To_HPCimg_server, args=(HPC_clientSocket,))
+            receiver = threading.Thread(target=recv_from_HPCimg_server, args=(HPC_clientSocket,))
+
+            ##  Start Thread
+            # HPC Image Processing Server Thread
+            sendImg.start()
+            receiver.start()
+            # Web Server Thread
+            sendLog.start()
 
 
-    ##   Declare Thread
-    # HPC Image Processing Server Thread
-    sendImg = threading.Thread(target=send_To_HPCimg_server, args=(HPC_clientSocket,))
-    receiver = threading.Thread(target=recv_from_HPCimg_server, args=(HPC_clientSocket,))
-    # Web Server Thread
-    sendLog = threading.Thread(target=send_Logdata_toWebserver, args=(Web_clientSocket,))
-
-    ##  Start Thread
-    # HPC Image Processing Server Thread
-    sendImg.start()
-    receiver.start()
-    # Web Server Thread
-    sendLog.start()
-
-
-    while True:
-        time.sleep(0)   # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌(1 일때)
-        pass            # sleep(0)은 cpu 선점권을 풀지 않음
-
-    HPC_clientSocket.close()
-    Web_clientSocket.close()
+            while True:
+                time.sleep(1)   # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌(1 일때)
+                pass            # sleep(0)은 cpu 선점권을 풀지 않음
+        except:
+            HPC_clientSocket.close()
+    except:
+        Web_clientSocket.close()
