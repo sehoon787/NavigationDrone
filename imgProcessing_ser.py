@@ -142,7 +142,7 @@ if __name__=="__main__":
                 time.sleep(0)   # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌(1 일때)
                 pass            # sleep(0)은 cpu 선점권을 풀지 않음
 
-        except socket.error:  # when socket connection failed
+        except:  # when socket connection failed
             # When everything is done, release the capture
             cv2.destroyAllWindows()
             print("Drone Socket close!!")
@@ -152,7 +152,7 @@ if __name__=="__main__":
             connectionSocket.close()
             serverSocket.close()
 
-    except socket.error:  # when socket connection failed
+    except:  # when socket connection failed
         print("Web Socket close!!")
         toWeb.close()
     finally:
