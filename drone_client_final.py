@@ -251,7 +251,7 @@ def drone_land(lati, longi, land_point):
         msgTo_webserver("(L)Set airspeed 1m/s")
         vehicle.airspeed = 1
 
-        print("Target Detect : ", land_point)
+        msgTo_webserver("Target Detect : ", land_point)
         find_point = str(land_point)
 
         i = vehicle.location.global_relative_frame.alt  # current altitude
@@ -341,8 +341,8 @@ def msgTo_webserver(msg_to_web):  # make message to HPC image processing server
     print(str(msg_to_web))
 
     data = Web_clientSocket.recv(1024)
-    data = str(data).split("b'", 1)[1].rsplit("'", 1)[0]
-    print(data)
+    data = data.decode("utf-8")
+    print(str(data))
 ## Thread 3
 # Move drone for TSP path and send log data to Web
 def send_Logdata_toWebserver(sock):
