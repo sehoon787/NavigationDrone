@@ -1,7 +1,6 @@
 # echo_client.py
 # -*- coding:utf-8 -*-
 
-import socket
 from dronekit import connect, VehicleMode, LocationGlobal, LocationGlobalRelative
 from pymavlink import mavutil  # Needed for command message definitions
 import time
@@ -234,7 +233,6 @@ def drone_fly(lati, longi):
         #vehicle.mode = VehicleMode("LAND")
         #time.sleep(1)
 
-        time.sleep(3)
         drone_land(lati, longi, land_point)     # image processing landing
 
         msgTo_webserver("(Go)Close vehicle object")
@@ -259,7 +257,12 @@ def drone_land(lati, longi, land_point):
 
             i = i - 1
 
-            if find_point == "Center":  # i M from Landing point
+            if vehicle.location.global_relative_frame.alt<=1:
+                msgTo_webserver("(L)Set General Landing Mode")
+                vehicle.mode = VehicleMode("LAND")
+                time.sleep(1)
+                break
+            elif find_point == "Center":  # i M from Landing point
                 msgTo_webserver("(L)Set Precision Landing Mode(Center)")
 
                 while True:
@@ -272,11 +275,6 @@ def drone_land(lati, longi, land_point):
                         msgTo_webserver("(L)Reached target altitude")
                         break
                     time.sleep(1)
-            elif vehicle.location.global_relative_frame.alt<=1:
-                msgTo_webserver("(L)Set General Landing Mode")
-                vehicle.mode = VehicleMode("LAND")
-                time.sleep(1)
-                break
             else:
                 msgTo_webserver("(L)Finding Landing Point Target")
                 msgTo_webserver("(L)Altitude :" + str(vehicle.location.global_relative_frame.alt))
@@ -359,7 +357,9 @@ def send_Logdata_toWebserver(sock):
         while num < client_index + 1:  # loop 12 times, manipulate it when you test this system
             num = num + 1     # to move first(1) point
             drone_fly(latitude[num], longitude[num])
-            point = (latitude[num] + '/' + longitude[num])
+            point = str(latitude[num]) + '/' + str(longitude[num])
+            msgTo_webserver(point)
+            point = "Target " + str(num) + " arrive"
             msgTo_webserver(point)
             time.sleep(1)
             if num < client_index:
