@@ -222,14 +222,13 @@ def drone_fly(lati, longi):
                 msgTo_webserver("(Go)Go Forward")
                 loc_point = LocationGlobalRelative(lati, longi, i)
                 vehicle.simple_goto(loc_point, groundspeed=1)
-                # Send a new target every two seconds
-                # For a complete implementation of follow me you'd want adjust this delay
-                time.sleep(1)
 
             dist = distance()
             if dist >= 100:
                 msgTo_webserver("(Go)Vehicle from Obstacle : " + str(dist))
             flytime = time.time() - starttime
+            # For a complete implementation of follow me you'd want adjust this delay
+            time.sleep(1)
 
         #msgTo_web("(L)Set General Landing Mode")
         #vehicle.mode = VehicleMode("LAND")
@@ -251,7 +250,7 @@ def drone_land(lati, longi, land_point):
         msgTo_webserver("(L)Set airspeed 1m/s")
         vehicle.airspeed = 1
 
-        msgTo_webserver("Target Detect : ", land_point)
+        msgTo_webserver("(L)Target Panel Detect : ", land_point)
         find_point = str(land_point)
 
         i = vehicle.location.global_relative_frame.alt  # current altitude
@@ -346,7 +345,7 @@ def msgTo_webserver(msg_to_web):  # make message to HPC image processing server
 ## Thread 3
 # Move drone for TSP path and send log data to Web
 def send_Logdata_toWebserver(sock):
-    #   To send Drone log, video and other informations to Web Server
+    #   To send Drone log, video and other information to Web Server
     #   Client socket connection to Web Server
     try:
         print("Connect Drone to Web Server!")
@@ -392,14 +391,14 @@ def send_Logdata_toWebserver(sock):
 
 if __name__=="__main__":
 
-    # socket connection address and port for HPC TSP server
-    # get shortest path data from HPC TSP server
-    TSP_SERVER_IP = "116.89.189.55"  # HPC TSP server IP
+    # socket connection address and port for Koren VM TSP server
+    # get shortest path data from Koren VM TSP server
+    TSP_SERVER_IP = "116.89.189.55"  # Koren VM TSP server IP
     TSP_SERVER_PORT = 22042
     SIZE = 512
     tsp_client_socket = socket(AF_INET, SOCK_STREAM)
     tsp_client_socket.connect((TSP_SERVER_IP, TSP_SERVER_PORT))
-    # to get TSP path from HPC TSP server
+    # to get TSP path from Koren VM TSP server
     get_TSP_path()
     time.sleep(5)
 
