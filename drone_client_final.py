@@ -238,11 +238,21 @@ def drone_fly(lati, longi):
         msgTo_webserver("(Go)Close vehicle object")
         vehicle.close()
         msgTo_webserver("(Go)Ready to leave to next Landing Point")
-    except KeyboardInterrupt:
-        msgTo_webserver("Emergency Land")
+    except Exception as e:  # when socket connection failed
+        print(e)
+        print("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
+        print("Close vehicle object")
+        vehicle.close()
+    except KeyboardInterrupt:
+        msgTo_webserver("EMERGENCY LAND!!")
+        vehicle.mode = VehicleMode("LAND")
+        time.sleep(1)
+        msgTo_webserver("Close vehicle object")
+        vehicle.close()
 def drone_land(lati, longi, land_point):
+    try:
         msgTo_webserver("(L)Setting Landing Mode!")
 
         msgTo_webserver("(L)Set airspeed 1m/s")
@@ -283,7 +293,19 @@ def drone_land(lati, longi, land_point):
                 # Send a new target every two seconds
                 # For a complete implementation of follow me you'd want adjust this delay
                 time.sleep(3)
-
+    except Exception as e:  # when socket connection failed
+        print(e)
+        print("EMERGENCY LAND!!")
+        vehicle.mode = VehicleMode("LAND")
+        time.sleep(1)
+        print("Close vehicle object")
+        vehicle.close()
+    except KeyboardInterrupt:
+        msgTo_webserver("EMERGENCY LAND!!")
+        vehicle.mode = VehicleMode("LAND")
+        time.sleep(1)
+        msgTo_webserver("Close vehicle object")
+        vehicle.close()
 
 # Using thread to connect HPC image processing server and Web server
 ## Thread 1
@@ -378,7 +400,15 @@ def send_Logdata_toWebserver(sock):
 
         ### End Drone Delivery System
 
-    except:  # when socket connection failed
+    except Exception as e:  # when socket connection failed
+        print(e)
+        print("EMERGENCY LAND!!")
+        vehicle.mode = VehicleMode("LAND")
+        time.sleep(1)
+        print("Close vehicle object")
+        vehicle.close()
+        Web_clientSocket.close()
+    except KeyboardInterrupt:
         print("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
