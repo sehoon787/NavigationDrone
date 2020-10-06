@@ -207,9 +207,9 @@ def drone_fly(lati, longi):
                 msgTo_webserver("(Go)Detect Obstacle")
 
                 i = i + 1
-                msgTo_webserver("(Go)Up to :", i)
+                msgTo_webserver("(Go)Up to :" + str(i))
                 while True:
-                    msgTo_webserver("(Go)Altitude :", vehicle.location.global_relative_frame.alt)
+                    msgTo_webserver("(Go)Altitude :" + str(vehicle.location.global_relative_frame.alt))
                     # Break and return from function just below target altitude.
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
@@ -250,7 +250,7 @@ def drone_land(lati, longi, land_point):
         msgTo_webserver("(L)Set airspeed 1m/s")
         vehicle.airspeed = 1
 
-        msgTo_webserver("(L)Target Panel Detect : ", land_point)
+        msgTo_webserver("(L)Target Panel Detect : " + str(land_point))
         find_point = str(land_point)
 
         i = vehicle.location.global_relative_frame.alt  # current altitude
@@ -263,7 +263,7 @@ def drone_land(lati, longi, land_point):
                 msgTo_webserver("(L)Set Precision Landing Mode(Center)")
 
                 while True:
-                    msgTo_webserver("(L)Altitude :", vehicle.location.global_relative_frame.alt)
+                    msgTo_webserver("(L)Altitude :" + str(vehicle.location.global_relative_frame.alt))
                     # Break and return from function just below target altitude.
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
@@ -279,7 +279,7 @@ def drone_land(lati, longi, land_point):
                 break
             else:
                 msgTo_webserver("(L)Finding Landing Point Target")
-                msgTo_webserver("(L)Altitude :", vehicle.location.global_relative_frame.alt)
+                msgTo_webserver("(L)Altitude :" + str(vehicle.location.global_relative_frame.alt))
                 loc_point = LocationGlobalRelative(lati, longi, i)
                 vehicle.simple_goto(loc_point, groundspeed=1)
                 # Send a new target every two seconds
