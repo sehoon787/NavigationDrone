@@ -354,7 +354,7 @@ def send_Logdata_toWebserver(sock):
         msgTo_webserver("Start to move")  # convert num to string type     send 1 to server
 
         # 1  start Drone delivery.    The number of point(including Home base) : 12
-        while num < client_index + 1:  # loop 12 times, manipulate it when you test this system
+        while num < client_index:  # loop 12 times, manipulate it when you test this system
             num = num + 1     # to move first(1) point
             drone_fly(latitude[num], longitude[num])
             point = str(latitude[num]) + '/' + str(longitude[num])
@@ -365,7 +365,7 @@ def send_Logdata_toWebserver(sock):
             if num < client_index:
                 vehicle = connect("/dev/ttyAMA0", wait_ready=True, baud=57600)
                 msgTo_webserver("Vehicle Reconnect!")
-            else:
+            elif num == client_index - 1:
                 msgTo_webserver("Return To Base")
 
         # 2(Finish Drone delivery)
