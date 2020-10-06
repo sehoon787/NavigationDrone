@@ -343,6 +343,7 @@ def msgTo_webserver(msg_to_web):  # make message to HPC image processing server
 ## Thread 3
 # Move drone for TSP path and send log data to Web
 def send_Logdata_toWebserver(sock):
+    global vehicle
     #   To send Drone log, video and other information to Web Server
     #   Client socket connection to Web Server
     try:
