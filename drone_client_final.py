@@ -184,7 +184,6 @@ def to_quaternion(roll=0.0, pitch=0.0, yaw=0.0):
 
     return [w, x, y, z]
 def drone_fly(lati, longi):
-    global land_point
     try:
         msgTo_webserver("(Go)Take off!")
         arm_and_takeoff(2)  # take off altitude 2M
@@ -192,7 +191,7 @@ def drone_fly(lati, longi):
         i = 4  # start altitude to move 4M
 
         msgTo_webserver("(Go)Set default/target airspeed to 3")
-        vehicle.airspeed = 3
+        vehicle.airspeed = 2
 
         msgTo_webserver("(Go)Angle Positioning and move toward")  # move to next point
 
@@ -220,7 +219,7 @@ def drone_fly(lati, longi):
             else:
                 msgTo_webserver("(Go)Go Forward")
                 loc_point = LocationGlobalRelative(lati, longi, i)
-                vehicle.simple_goto(loc_point, groundspeed=1)
+                vehicle.simple_goto(loc_point, groundspeed=2)
 
             dist = distance()
             if dist >= 100:
@@ -233,7 +232,7 @@ def drone_fly(lati, longi):
         #vehicle.mode = VehicleMode("LAND")
         #time.sleep(1)
 
-        drone_land(lati, longi, land_point)     # image processing landing
+        drone_land(lati, longi)     # image processing landing
 
         msgTo_webserver("(Go)Close vehicle object")
         vehicle.close()
@@ -251,7 +250,8 @@ def drone_fly(lati, longi):
         time.sleep(1)
         msgTo_webserver("Close vehicle object")
         vehicle.close()
-def drone_land(lati, longi, land_point):
+def drone_land(lati, longi):
+    global land_point
     try:
         msgTo_webserver("(L)Setting Landing Mode!")
 
