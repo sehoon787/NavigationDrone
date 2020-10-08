@@ -330,8 +330,8 @@ def send_To_HPCimg_server(sock):
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
             # cv2. imencode(ext, img [, params])
-            # encode_param format, frame to png image encode
-            result, frame = cv2.imencode('.png', frame, encode_param)
+            # encode_param format, frame to jpg image encode
+            result, frame = cv2.imencode('.jpg', frame, encode_param)
             # convert frame to String type
             data = numpy.array(frame)
             stringData = data.tobytes()
