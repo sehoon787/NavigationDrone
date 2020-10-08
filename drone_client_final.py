@@ -201,7 +201,7 @@ def drone_fly(lati, longi):
         flytime=0
         while flytime <= 40:
 
-            if dist <= 300 and dist >= 100:  # 3M from obstacle
+            if 300 >= dist >= 100:  # 3M from obstacle
                 msgTo_webserver("(Go)Detect Obstacle")
 
                 i = i + 1
@@ -222,7 +222,7 @@ def drone_fly(lati, longi):
                 vehicle.simple_goto(loc_point, groundspeed=2)
 
             dist = distance()
-            if dist >= 100:
+            if 300 >= dist >= 100:
                 msgTo_webserver("(Go)Vehicle from Obstacle : " + str(dist))
             flytime = time.time() - starttime
             # For a complete implementation of follow me you'd want adjust this delay
