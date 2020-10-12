@@ -78,7 +78,7 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
                 cv2.drawContours(original, [c], -1, (0, 255, 0), 2)
                 cv2.circle(original, (cX, cY), 7, (255, 255, 255), -1)
 
-                if (cX >= 350 and cX <= 850) and (cY >= 200 and cY <= 600):
+                if (150 <= cX <= 410) and (120 <= cY <= 380):
                     cv2.putText(original, "Center", (cX - 20, cY - 20),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                     print("X : " + str(cX) + ", Y : " + str(cY))
