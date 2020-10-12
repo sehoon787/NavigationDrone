@@ -10,17 +10,17 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 // Thread for image proccessing
-#include <pthread.h>   
+#include <pthread.h>
 #include <time.h>
 using namespace std;
 
 #define MAX_CLIENT 20
-#define real_user 11
+#define real_user 6
 #define andport 22041
 #define droneport 22042
 const double pi = 3.1415926535897932384626433832795028841971693993751;
 
-double completed[15], cost = 0;
+double completed[10], cost = 0;
 int user;   // service requesting user number (target point number)
 int* course; // global variable about TSP Path
 int coursenum = 0;   // location of course array
@@ -31,15 +31,15 @@ struct Target {      // Latitude and Longitude per each user(user numbering)
    double longitude;
 };
 
-Target targetdata[21] = 
-{ {"0", 35.132833, 129.106215 }, {"1", 35.133118, 129.105832 }, {"2", 35.133139, 129.106001 }, 
-{"3", 35.133150, 129.106168 }, {"4", 35.133168, 129.106331 }, {"5", 35.133181, 129.106487 }, 
-{"6", 35.132965, 129.105877 }, {"7", 35.132983, 129.106019 }, {"8", 35.132994, 129.106182 }, 
-{"9", 35.133008, 129.106357 }, {"10", 35.132985, 129.106512 }, {"11", 35.132681, 129.105871 }, 
+Target targetdata[21] =
+{ {"0", 35.132833, 129.106215 }, {"1", 35.133118, 129.105832 }, {"2", 35.133139, 129.106001 },
+{"3", 35.133150, 129.106168 }, {"4", 35.133168, 129.106331 }, {"5", 35.133181, 129.106487 },
+{"6", 35.132965, 129.105877 }, {"7", 35.132983, 129.106019 }, {"8", 35.132994, 129.106182 },
+{"9", 35.133008, 129.106357 }, {"10", 35.132985, 129.106512 }, {"11", 35.132681, 129.105871 },
 {"12", 35.132695, 129.106040 }, {"13", 35.132706, 129.106222 }, {"14", 35.132721, 129.106391 },
-{"15", 35.132737, 129.106543 }, {"16", 35.132498, 129.105905 }, {"17", 35.132498, 129.106048 }, 
+{"15", 35.132737, 129.106543 }, {"16", 35.132498, 129.105905 }, {"17", 35.132498, 129.106048 },
 {"18", 35.132516, 129.106236 }, {"19", 35.132526, 129.106435 }, {"20", 35.132537, 129.106584 } };
-// base point and allocated target point(Drone zone) GPS point  
+// base point and allocated target point(Drone zone) GPS point
 
 
 string snddata;   // string to send Client
@@ -65,7 +65,7 @@ int current_user = 0;
 int main()
 {
    /* service process
-   get user wanting drone zone through Android app -> put requested drone zone data int TSP algorithm  
+   get user wanting drone zone through Android app -> put requested drone zone data int TSP algorithm
    -> calculating TSP path, and send shortest visiting path data to Drone client(Pixhawk-Pi) */
    cout << "Start Drone Delivery System\n";
 
@@ -132,8 +132,8 @@ int main()
    {
       client_sock = accept(server_sock, (struct sockaddr*) & client_addr, (socklen_t*)& client_addr_size);
       current_user++;
-      cout << "==================================================\nClient Addr " << inet_ntoa(client_addr.sin_addr) 
-     << "is Waiting\nZCurrent waiting User : " << current_user << "\nPort : " << ntohs(client_addr.sin_port) 
+      cout << "==================================================\nClient Addr " << inet_ntoa(client_addr.sin_addr)
+     << "is Waiting\nZCurrent waiting User : " << current_user << "\nPort : " << ntohs(client_addr.sin_port)
      << "\n==================================================\n";
 
       if (client_sock < 0)
@@ -154,13 +154,13 @@ int main()
          close(client_sock);
          continue;
       }
-      if (client_index >= 10){   // client number over 10 or waiting time over 180 sec then server socket close
+      if (client_index >= 5){   // client number over 10 or waiting time over 180 sec then server socket close
          break;
       }
    }
    // Android client socket connection finish
-   while(client_index != 11){
-      if(client_index==11) break;
+   while(client_index != 6){
+      if(client_index==6) break;
    }
 
    cout << "\nCurrent Client : " << client_index-1 << "\n";
@@ -176,7 +176,7 @@ int main()
       for (j = 0; j < real_user; j++) {
          if (i == j) dist[i][j] = 0;
          else {
-            dist[i][j] = calculateDistance(from_user[i].latitude, 
+            dist[i][j] = calculateDistance(from_user[i].latitude,
             from_user[i].longitude, from_user[j].latitude, from_user[j].longitude);
          }
       }
@@ -187,7 +187,7 @@ int main()
 
     cout << "\n\nDelivery Client order => ";
    mincost(0, real_user, dist, course); //passing 0 because starting vertex
-    
+
    cout << "\nDelivery Drone Zone Path";
     for(i=0; i < coursenum+1 ; i++){
         cout << " => " << from_user[course[i]].pointNum;
@@ -245,8 +245,6 @@ int main()
    // end of Socket connection
    cout <<  "\nDisconnect!! Bye~!\n\n";   // Drone client socket connection finish
 
-   system("python3 ./imgProcessing_ser.py");    // start image processing server
-
    return 0;
 }
 
@@ -271,7 +269,7 @@ void takeInput(int points, double cordinates[real_user][real_user])      // poin
    int n = points;
     cout << fixed;
    cout.precision(2);
-   
+
     cout << "\nThe number of points(Included Home Point) : " << points << "\n";
 
    cout << "\nTSP Cost Matrix\n";
@@ -373,7 +371,7 @@ void* t_function(void* arg)
 
    memset(clientpoint, 0x00, BUFSIZ);
    // compare and copy data to put and calculate TSP algorithm
-   if (client_index < 11) {
+   if (client_index < 6) {
       (read(client_sock, clientpoint, BUFSIZ));
       i = client_index;   // to save client index while client thraed function run
       for (int cnt = 0; cnt < 21; cnt++) {
