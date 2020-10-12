@@ -12,7 +12,7 @@ from socket import *
 import RPi.GPIO as GPIO     # RaspberryPi lib
 import sys
 
-client_index = 11  # the number of client. Add 1 to use path information(for Home base and to return)
+client_index = 6  # the number of client. Add 1 to use path information(for Home base and to return)
 locationsTo_Web = ""    # to send TSP path to Web server
 land_point = "Center"
 
