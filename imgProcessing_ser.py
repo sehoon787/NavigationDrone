@@ -111,6 +111,7 @@ def get_log_from_Drone(port):
     while logdata!="arrive":
         logdata = connectionSocket2.recv(1024)
         logdata = str(logdata).split("b'", 1)[1].rsplit("'", 1)[0]
+        logdata = "{\"log\":" + logdata + "\"}\""
         print(logdata)
         ## send receive message to drone
         connectionSocket2.sendall(str("Server message Get!").encode("utf-8"))
@@ -131,7 +132,7 @@ if __name__=="__main__":
 
     ## here, Client role 1(Image)
     # then this program is client to send image to Web Server
-    WebSERVER_IP = '192.168.0.2'  # image Web server IP
+    WebSERVER_IP = '116.89.189.55'  # image Web server IP
     WebSERVER_PORT = 22043  # to send image to Web(10004 external port)
     ## Connect to Web Server for Image
     Img_Web = socket(AF_INET, SOCK_STREAM)
@@ -141,8 +142,8 @@ if __name__=="__main__":
         try:
             ## here, Client role 2(Log)
             # then this program is client to send log to Web Server
-            WebSERVER_IP = '192.168.0.2'  # log Web server IP
-            WebSERVER_PORT2 = 22042  # to send log to Web(10004 external port)
+            WebSERVER_IP = '116.89.189.55'  # log Web server IP
+            WebSERVER_PORT2 = 22046  # to send log to Web(10004 external port)
             ## Connect to Web Server for Log
             Log_Web = socket(AF_INET, SOCK_STREAM)
 
