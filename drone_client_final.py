@@ -316,8 +316,8 @@ def send_To_HPCimg_server(sock):
         # PI camera image capture
         cam = cv2.VideoCapture(0)
         # Frame size 3 = width, 4 = height
-        cam.set(3, 1280);
-        cam.set(4, 960);
+        cam.set(3, 690);
+        cam.set(4, 480);
         # image quality range : 0~100, set 90 (default = 95)
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 
