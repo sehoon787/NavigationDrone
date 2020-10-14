@@ -41,11 +41,6 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
 
             # Decode data
             frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
-
-            # to send Web server
-            b64img = base64.b64encode(frame)
-            Img_Web.send(b64img)
-
             original = frame.copy()
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             lower = np.array([0, 208, 94], dtype="uint8")
@@ -87,18 +82,19 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
                 if (150 <= cX <= 410) and (120 <= cY <= 380):
                     cv2.putText(original, "Center", (cX - 20, cY - 20),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-                    print("X : " + str(cX) + ", Y : " + str(cY))
+                    #print("X : " + str(cX) + ", Y : " + str(cY))
                     msg_to_drone = "Center"
-                    print(msg_to_drone)
+                    #print(msg_to_drone)
                 else:
                     cv2.putText(original, "Out of Target", (cX - 20, cY - 20),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-                    print("X : " + str(cX) + ", Y : " + str(cY))
+                    #print("X : " + str(cX) + ", Y : " + str(cY))
                     msg_to_drone = "Out of Target"
-                    print(msg_to_drone)
+                    #print(msg_to_drone)
 
             # cv2.imshow("mask", mask)
             cv2.imshow("original", original)
+            cv2.imwrite("data.jpg", original)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -124,6 +120,10 @@ def get_log_from_Drone(port):
         ## send log to KorenVM Web server
     connectionSocket2.close()
     serverSocket2.close()
+    connectionSocket.close()
+    serverSocket.close()
+    Log_Web.close()
+    Img_Web.close()
     print("Connect Finish")
 
 def send_log_to_Web(port):
@@ -131,6 +131,15 @@ def send_log_to_Web(port):
         Log_Web.send(logdata.encode("utf-8"))
         Log_Web.recv(1024)
 
+def send_img_to_Web(port):
+    # to send Web server
+    while True:
+        image = cv2.imread("data.jpg")
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+        imgencode = cv2.imencode(".jpg", image, encode_param)
+        data = np.array(imgencode)
+        b64img = base64.b64encode(data)
+        Img_Web.send(b64img)
 
 if __name__=="__main__":
 
@@ -138,7 +147,7 @@ if __name__=="__main__":
 
     ## here, Client role 1(Image)
     # then this program is client to send image to Web Server
-    WebSERVER_IP = '116.89.189.55'  # image Web server IP
+    WebSERVER_IP = '192.168.0.5'  # image Web server IP
     WebSERVER_PORT = 22043  # to send image to Web(10004 external port)
     ## Connect to Web Server for Image
     Img_Web = socket(AF_INET, SOCK_STREAM)
@@ -148,7 +157,7 @@ if __name__=="__main__":
         try:
             ## here, Client role 2(Log)
             # then this program is client to send log to Web Server
-            WebSERVER_IP = '116.89.189.55'  # log Web server IP
+            WebSERVER_IP = '192.168.0.5'  # log Web server IP
             WebSERVER_PORT2 = 22046  # to send log to Web(10004 external port)
             ## Connect to Web Server for Log
             Log_Web = socket(AF_INET, SOCK_STREAM)
@@ -181,11 +190,13 @@ if __name__=="__main__":
                     sender = threading.Thread(target=send_To_Drone, args=(connectionSocket,))  # 영상처리결과 송신 쓰레드
                     log = threading.Thread(target=get_log_from_Drone, args=(connectionSocket2,))  # 로그 수신 쓰레드
                     sendlog = threading.Thread(target=send_log_to_Web, args=(HPCServer_PORT2,))  # 로그 전송 쓰레드
+                    sendImg = threading.Thread(target=send_img_to_Web, args=(HPCServer_PORT2,))  # 로그 전송 쓰레드
 
                     receiver.start()
                     sendlog.start()
                     sender.start()
                     log.start()
+                    sendImg.start()
 
                     while True:
                         time.sleep(1)  # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌
