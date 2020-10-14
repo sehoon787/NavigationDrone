@@ -116,7 +116,7 @@ def get_log_from_Drone(port):
         logdata = "{\"log\":\"" + logdata + "\"}"
         print(logdata)
         ## send receive message to drone
-        connectionSocket2.sendall(str("Server message Get!").encode("utf-8"))
+        connectionSocket2.sendall(str("Server Get!").encode("utf-8"))
         ## send log to KorenVM Web server
     connectionSocket2.close()
     serverSocket2.close()
@@ -133,13 +133,23 @@ def send_log_to_Web(port):
 
 def send_img_to_Web(port):
     # to send Web server
-    while True:
-        image = cv2.imread("data.jpg")
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-        imgencode = cv2.imencode(".jpg", image, encode_param)
-        data = np.array(imgencode)
-        b64img = base64.b64encode(data)
-        Img_Web.send(b64img)
+    # while True:
+    #     image_path = "./data.jpg"
+    #
+    #     if image_path != '':
+    #         with open(image_path, "rb") as imageFile:
+    #             image_data = base64.b64encode(imageFile.read())
+    #     else:
+    #         image_data = 'cusdom_image'
+    #
+    #     Img_Web.send(image_data)
+
+    image = cv2.imread("data.jpg")
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+    imgencode = cv2.imencode(".jpg", image, encode_param)
+    data = np.array(imgencode)
+    b64img = base64.b64encode(data)
+    Img_Web.send(b64img)
 
 if __name__=="__main__":
 
@@ -147,7 +157,7 @@ if __name__=="__main__":
 
     ## here, Client role 1(Image)
     # then this program is client to send image to Web Server
-    WebSERVER_IP = '192.168.0.5'  # image Web server IP
+    WebSERVER_IP = '116.89.189.55'  # image Web server IP
     WebSERVER_PORT = 22043  # to send image to Web(10004 external port)
     ## Connect to Web Server for Image
     Img_Web = socket(AF_INET, SOCK_STREAM)
@@ -157,7 +167,7 @@ if __name__=="__main__":
         try:
             ## here, Client role 2(Log)
             # then this program is client to send log to Web Server
-            WebSERVER_IP = '192.168.0.5'  # log Web server IP
+            WebSERVER_IP = '116.89.189.55'  # log Web server IP
             WebSERVER_PORT2 = 22046  # to send log to Web(10004 external port)
             ## Connect to Web Server for Log
             Log_Web = socket(AF_INET, SOCK_STREAM)
@@ -190,7 +200,7 @@ if __name__=="__main__":
                     sender = threading.Thread(target=send_To_Drone, args=(connectionSocket,))  # 영상처리결과 송신 쓰레드
                     log = threading.Thread(target=get_log_from_Drone, args=(connectionSocket2,))  # 로그 수신 쓰레드
                     sendlog = threading.Thread(target=send_log_to_Web, args=(HPCServer_PORT2,))  # 로그 전송 쓰레드
-                    sendImg = threading.Thread(target=send_img_to_Web, args=(HPCServer_PORT2,))  # 로그 전송 쓰레드
+                    sendImg = threading.Thread(target=send_img_to_Web, args=(HPCServer_PORT2,))  # 영상 전송 쓰레드
 
                     receiver.start()
                     sendlog.start()
