@@ -103,30 +103,30 @@ def arm_and_takeoff(aTargetAltitude):
     Arms vehicle and fly to aTargetAltitude.
     """
 
-    msgTo_webserver("Basic pre-arm checks")
+    msgTo_log_server("Basic pre-arm checks")
     # Don't try to arm until autopilot is ready
     while not vehicle.is_armable:
         print(" Waiting for vehicle to initialise...")
         time.sleep(1)
 
-    msgTo_webserver("Arming motors")
+    msgTo_log_server("Arming motors")
     # Copter should arm in GUIDED mode
     vehicle.mode = VehicleMode("GUIDED")
     vehicle.armed = True
 
     # Confirm vehicle armed before attempting to take off
     while not vehicle.armed:
-        msgTo_webserver(" Waiting for arming...")
+        msgTo_log_server(" Waiting for arming...")
         time.sleep(1)
 
-    msgTo_webserver("Taking off!")
+    msgTo_log_server("Taking off!")
     vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
 
     while True:
-        msgTo_webserver(" Altitude: ", vehicle.location.global_relative_frame.alt)
+        msgTo_log_server(" Altitude: ", vehicle.location.global_relative_frame.alt)
         # Break and return from function just below target altitude.
         if vehicle.location.global_relative_frame.alt >= aTargetAltitude * 0.95:
-            msgTo_webserver("Reached target altitude")
+            msgTo_log_server("Reached target altitude")
             break
         time.sleep(1)
 def send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
@@ -185,15 +185,15 @@ def to_quaternion(roll=0.0, pitch=0.0, yaw=0.0):
     return [w, x, y, z]
 def drone_fly(lati, longi):
     try:
-        msgTo_webserver("(Go)Take off!")
+        msgTo_log_server("(Go)Take off!")
         arm_and_takeoff(2)  # take off altitude 2M
 
         i = 4  # start altitude to move 4M
 
-        msgTo_webserver("(Go)Set default/target airspeed to 3")
+        msgTo_log_server("(Go)Set default/target airspeed to 3")
         vehicle.airspeed = 2
 
-        msgTo_webserver("(Go)Angle Positioning and move toward")  # move to next point
+        msgTo_log_server("(Go)Angle Positioning and move toward")  # move to next point
 
         dist = 1000
 
@@ -202,29 +202,29 @@ def drone_fly(lati, longi):
         while flytime <= 40:
 
             if 100 <= dist <= 300:  # 3M from obstacle
-                msgTo_webserver("(Go)Detect Obstacle")
+                msgTo_log_server("(Go)Detect Obstacle")
 
                 i = i + 1
-                msgTo_webserver("(Go)Up to : " + str(i))
+                msgTo_log_server("(Go)Up to : " + str(i))
                 while True:
-                    msgTo_webserver("(Go)Altitude : " + str(vehicle.location.global_relative_frame.alt))
+                    msgTo_log_server("(Go)Altitude : " + str(vehicle.location.global_relative_frame.alt))
                     # Break and return from function just below target altitude.
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
                                          thrust=0.6)
                     if vehicle.location.global_relative_frame.alt >= i * 0.95:
-                        msgTo_webserver("(Go)Reached target altitude")
+                        msgTo_log_server("(Go)Reached target altitude")
                         break
                     time.sleep(1)
             else:
-                msgTo_webserver("(Go)Go Forward")
+                msgTo_log_server("(Go)Go Forward")
                 loc_point = LocationGlobalRelative(lati, longi, i)
                 vehicle.simple_goto(loc_point, groundspeed=2)
                 time.sleep(1)
 
             dist = distance()
             if 100 <= dist <= 300:
-                msgTo_webserver("(Go)Vehicle from Obstacle : " + str(dist))
+                msgTo_log_server("(Go)Vehicle from Obstacle : " + str(dist))
             flytime = time.time() - starttime
             # For a complete implementation of follow me you'd want adjust this delay
 
@@ -234,9 +234,9 @@ def drone_fly(lati, longi):
 
         drone_land(lati, longi)     # image processing landing
 
-        msgTo_webserver("(Go)Close vehicle object")
+        msgTo_log_server("(Go)Close vehicle object")
         vehicle.close()
-        msgTo_webserver("(Go)Ready to leave to next Landing Point")
+        msgTo_log_server("(Go)Ready to leave to next Landing Point")
     except Exception as e:  # when socket connection failed
         print(e)
         print("EMERGENCY LAND!!")
@@ -245,20 +245,20 @@ def drone_fly(lati, longi):
         print("Close vehicle object")
         vehicle.close()
     except KeyboardInterrupt:
-        msgTo_webserver("EMERGENCY LAND!!")
+        msgTo_log_server("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
-        msgTo_webserver("Close vehicle object")
+        msgTo_log_server("Close vehicle object")
         vehicle.close()
 def drone_land(lati, longi):
     global land_point
     try:
-        msgTo_webserver("(L)Setting Landing Mode!")
+        msgTo_log_server("(L)Setting Landing Mode!")
 
-        msgTo_webserver("(L)Set airspeed 1m/s")
+        msgTo_log_server("(L)Set airspeed 1m/s")
         vehicle.airspeed = 1
 
-        msgTo_webserver("(L)Target Panel Detect : " + str(land_point))
+        msgTo_log_server("(L)Target Panel Detect : " + str(land_point))
         find_point = str(land_point)
 
         i = vehicle.location.global_relative_frame.alt  # current altitude
@@ -268,26 +268,26 @@ def drone_land(lati, longi):
             i = i - 1
 
             if vehicle.location.global_relative_frame.alt<=1:
-                msgTo_webserver("(L)Set General Landing Mode")
+                msgTo_log_server("(L)Set General Landing Mode")
                 vehicle.mode = VehicleMode("LAND")
                 time.sleep(1)
                 break
             elif find_point == "Center":  # i M from Landing point
-                msgTo_webserver("(L)Set Precision Landing Mode(Center)")
+                msgTo_log_server("(L)Set Precision Landing Mode(Center)")
 
                 while True:
-                    msgTo_webserver("(L)Altitude : " + str(vehicle.location.global_relative_frame.alt))
+                    msgTo_log_server("(L)Altitude : " + str(vehicle.location.global_relative_frame.alt))
                     # Break and return from function just below target altitude.
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
                                          thrust=0.4)
                     if vehicle.location.global_relative_frame.alt >= i * 0.95:
-                        msgTo_webserver("(L)Reached target altitude")
+                        msgTo_log_server("(L)Reached target altitude")
                         break
                     time.sleep(1)
             else:
-                msgTo_webserver("(L)Finding Landing Point Target")
-                msgTo_webserver("(L)Altitude : " + str(vehicle.location.global_relative_frame.alt))
+                msgTo_log_server("(L)Finding Landing Point Target")
+                msgTo_log_server("(L)Altitude : " + str(vehicle.location.global_relative_frame.alt))
                 loc_point = LocationGlobalRelative(lati, longi, i)
                 vehicle.simple_goto(loc_point, groundspeed=1)
                 # Send a new target every two seconds
@@ -301,15 +301,15 @@ def drone_land(lati, longi):
         print("Close vehicle object")
         vehicle.close()
     except KeyboardInterrupt:
-        msgTo_webserver("EMERGENCY LAND!!")
+        msgTo_log_server("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
-        msgTo_webserver("Close vehicle object")
+        msgTo_log_server("Close vehicle object")
         vehicle.close()
 
 # Using thread to connect HPC image processing server and Web server
 ## Thread 1
-def send_To_HPCimg_server(sock):
+def send_To_HPC_Imgserver(sock):
     print("Connect to Image Processing Server")
     try:
         # to send drone cam image to HPC image processing server
@@ -338,65 +338,65 @@ def send_To_HPCimg_server(sock):
 
             # send data to HPC image processing server
             # (str(len(stringData))).encode().ljust(16)
-            HPC_clientSocket.sendall((str(len(stringData))).encode().ljust(16) + stringData)
+            img_clientSocket.sendall((str(len(stringData))).encode().ljust(16) + stringData)
 
     except:  # when socket connection failed
         print("Socket Close!!")
         cam.release()
-        HPC_clientSocket.close()
+        img_clientSocket.close()
     finally:
-        HPC_clientSocket.close()
+        img_clientSocket.close()
 ## Thread 2
-def recv_from_HPCimg_server(sock):
+def recv_From_HPC_Imgserver(sock):
     global land_point
     while True:
-        data = HPC_clientSocket.recv(1024)
+        data = img_clientSocket.recv(1024)
         land_point = data.decode("utf-8")
         time.sleep(1)
 
 
-def msgTo_webserver(msg_to_web):  # make message to HPC image processing server
-    Web_clientSocket.sendall(str(msg_to_web).encode("utf-8"))
+def msgTo_log_server(msg_to_web):  # make message to HPC image processing server
+    log_clientSocket.sendall(str(msg_to_web).encode("utf-8"))
     print(str(msg_to_web))
 
-    data = Web_clientSocket.recv(1024)
+    data = log_clientSocket.recv(1024)
     data = data.decode("utf-8")
     print(str(data))
 ## Thread 3
 # Move drone for TSP path and send log data to Web
-def send_Logdata_toWebserver(sock):
+def send_To_HPC_Logserver(sock):
     global vehicle
     #   To send Drone log, video and other information to Web Server
     #   Client socket connection to Web Server
     try:
         print("Connect Drone to Web Server!")
-        msgTo_webserver(locationsTo_Web)
+        msgTo_log_server(locationsTo_Web)
 
         num = 0  # Current Target point to send Server
 
-        msgTo_webserver("Start to move")  # convert num to string type     send 1 to server
+        msgTo_log_server("Start to move")  # convert num to string type     send 1 to server
 
         # 1  start Drone delivery.    The number of point(including Home base) : 12
         while num < client_index:  # loop 12 times, manipulate it when you test this system
             num = num + 1     # to move first(1) point
             drone_fly(latitude[num], longitude[num])
             point = str(latitude[num]) + '/' + str(longitude[num])
-            msgTo_webserver(point)
+            msgTo_log_server(point)
             point = "Target " + str(num) + " arrive"
-            msgTo_webserver(point)
+            msgTo_log_server(point)
             time.sleep(1)
             if num < client_index:
                 vehicle = connect("/dev/ttyACM0", wait_ready=True, baud=57600)
-                msgTo_webserver("Vehicle Reconnect!")
+                msgTo_log_server("Vehicle Reconnect!")
             elif num == client_index - 1:
-                msgTo_webserver("Return To Base")
+                msgTo_log_server("Return To Base")
 
         # 2(Finish Drone delivery)
-        msgTo_webserver("Completed to Delivery")
-        msgTo_webserver("Finish")
+        msgTo_log_server("Completed to Delivery")
+        msgTo_log_server("Finish")
 
-        msgTo_webserver("arrive")
-        Web_clientSocket.close()  # close socket connection
+        msgTo_log_server("arrive")
+        log_clientSocket.close()  # close socket connection
 
         ### End Drone Delivery System
 
@@ -407,16 +407,16 @@ def send_Logdata_toWebserver(sock):
         time.sleep(1)
         print("Close vehicle object")
         vehicle.close()
-        Web_clientSocket.close()
+        log_clientSocket.close()
     except KeyboardInterrupt:
         print("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
         print("Close vehicle object")
         vehicle.close()
-        Web_clientSocket.close()
+        log_clientSocket.close()
     finally:
-        Web_clientSocket.close()
+        log_clientSocket.close()
 
 
 
@@ -436,35 +436,35 @@ if __name__=="__main__":
 
     ######## Start flying Drone ########
 
-    ## HPC Image processing Server(Image)
+    ## Image processing Server(HPC)
     # send drone cam image to HPC image processing server and get landing data from HPC server
-    IMG_SERVER_IP = "192.168.0.6"   # Koren VM Image Processing server IP
+    IMG_SERVER_IP = "192.168.0.6"   # HPC Image Processing server IP
     IMG_SERVER_PORT = 22044    # HPC external port 22044(10011)
-    HPC_clientSocket = socket(AF_INET, SOCK_STREAM)
-    HPC_clientSocket.connect((IMG_SERVER_IP, IMG_SERVER_PORT))
+    img_clientSocket = socket(AF_INET, SOCK_STREAM)
+    img_clientSocket.connect((IMG_SERVER_IP, IMG_SERVER_PORT))
 
 
     try:
-        ## Web Server(Log)
-        # send drone log(altitude, arrive point point etc..) to Web server
-        Web_SERVER_IP = "192.168.0.6"  # koren SDI VM IP
-        Web_SERVER_PORT = 22045
-        Web_clientSocket = socket(AF_INET, SOCK_STREAM)
-        Web_clientSocket.connect((Web_SERVER_IP, Web_SERVER_PORT))
+        ## Log Server (HPC)
+        # send drone log(altitude, arrive point point etc..) to Log server
+        Log_SERVER_IP = "192.168.0.6"  # Log Server IP
+        Log_SERVER_PORT = 22045
+        log_clientSocket = socket(AF_INET, SOCK_STREAM)
+        log_clientSocket.connect((Log_SERVER_IP, Log_SERVER_PORT))
 
         try:
             ##   Declare Thread
-            # Web Server Thread
-            sendLog = threading.Thread(target=send_Logdata_toWebserver, args=(Web_clientSocket,))
-            # HPC Image Processing Server Thread
-            sendImg = threading.Thread(target=send_To_HPCimg_server, args=(HPC_clientSocket,))
-            receiver = threading.Thread(target=recv_from_HPCimg_server, args=(HPC_clientSocket,))
+            # Log Server Thread
+            sendLog = threading.Thread(target=send_To_HPC_Logserver, args=(log_clientSocket,))
+            # Image Processing Server Thread
+            sendImg = threading.Thread(target=send_To_HPC_Imgserver, args=(img_clientSocket,))
+            receiver = threading.Thread(target=recv_From_HPC_Imgserver, args=(img_clientSocket,))
 
             ##  Start Thread
-            # HPC Image Processing Server Thread
+            # Image Processing Server Thread
             sendImg.start()
             receiver.start()
-            # Web Server Thread
+            # Log Server Thread
             sendLog.start()
 
 
@@ -476,20 +476,20 @@ if __name__=="__main__":
             print("EMERGENCY LAND!!")
             time.sleep(1)
             print("Close vehicle object")
-            HPC_clientSocket.close()
+            img_clientSocket.close()
         except KeyboardInterrupt:
-            msgTo_webserver("EMERGENCY LAND!!")
+            msgTo_log_server("EMERGENCY LAND!!")
             time.sleep(1)
-            msgTo_webserver("Close vehicle object")
-            HPC_clientSocket.close()
+            msgTo_log_server("Close vehicle object")
+            img_clientSocket.close()
     except Exception as e:  # when socket connection failed
         print(e)
         print("EMERGENCY LAND!!")
         time.sleep(1)
         print("Close vehicle object")
-        Web_clientSocket.close()
+        log_clientSocket.close()
     except KeyboardInterrupt:
-        msgTo_webserver("EMERGENCY LAND!!")
+        msgTo_log_server("EMERGENCY LAND!!")
         time.sleep(1)
-        msgTo_webserver("Close vehicle object")
-        Web_clientSocket.close()
+        msgTo_log_server("Close vehicle object")
+        log_clientSocket.close()
