@@ -5,9 +5,10 @@ from socket import *
 import cv2
 import numpy as np
 import time
+import base64
 
 msg_to_drone = "Center"
-logdata = "empty"
+logdata = "{\"log\":\"empty\"}"
 
 # function to return received buffer from socket
 def recvall(sock, count):
@@ -36,10 +37,15 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
             stringData = recvall(connectionSocket, int(length))
             data = np.fromstring(stringData, dtype='uint8')
 
-            Img_Web.sendall((str(len(stringData))).encode().ljust(16) + stringData)  # send image to Web server
+            #Img_Web.sendall((str(len(stringData))).encode().ljust(16) + stringData)  # send image to Web server
 
             # Decode data
             frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
+
+            # to send Web server
+            b64img = base64.b64encode(frame)
+            Img_Web.send(b64img)
+
             original = frame.copy()
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             lower = np.array([0, 208, 94], dtype="uint8")
@@ -111,7 +117,7 @@ def get_log_from_Drone(port):
     while logdata!="arrive":
         logdata = connectionSocket2.recv(1024)
         logdata = str(logdata).split("b'", 1)[1].rsplit("'", 1)[0]
-        logdata = "{\"log\":" + logdata + "\"}\""
+        logdata = "{\"log\":\"" + logdata + "\"}"
         print(logdata)
         ## send receive message to drone
         connectionSocket2.sendall(str("Server message Get!").encode("utf-8"))
