@@ -23,8 +23,8 @@ longitude = []
 # GPIO Mode (BOARD / BCM)
 GPIO.setmode(GPIO.BCM)
 # set GPIO Pins
-GPIO_TRIGGER = 19
-GPIO_ECHO = 6
+GPIO_TRIGGER = 26
+GPIO_ECHO = 19
 # set GPIO direction (IN / OUT)
 GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 GPIO.setup(GPIO_ECHO, GPIO.IN)
