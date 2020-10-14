@@ -29,7 +29,7 @@ GPIO_ECHO = 6
 GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
 GPIO.setup(GPIO_ECHO, GPIO.IN)
 
-vehicle = connect('/dev/ttyAMA0', wait_ready=True, baud=57600)
+vehicle = connect('/dev/ttyACM0', wait_ready=True, baud=57600)
 print("Vehicle Connect")
 
 
@@ -386,7 +386,7 @@ def send_Logdata_toWebserver(sock):
             msgTo_webserver(point)
             time.sleep(1)
             if num < client_index:
-                vehicle = connect("/dev/ttyAMA0", wait_ready=True, baud=57600)
+                vehicle = connect("/dev/ttyACM0", wait_ready=True, baud=57600)
                 msgTo_webserver("Vehicle Reconnect!")
             elif num == client_index - 1:
                 msgTo_webserver("Return To Base")
