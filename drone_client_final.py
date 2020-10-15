@@ -266,7 +266,7 @@ def drone_land(lati, longi):
         while True:
 
             i = i - 1
-            print(find_point)       # to print center or not
+            msgTo_log_server(find_point)       # to print center or not
 
             if vehicle.location.global_relative_frame.alt<=1:
                 msgTo_log_server("(L)Set General Landing Mode")
