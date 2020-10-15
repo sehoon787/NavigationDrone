@@ -123,10 +123,10 @@ def arm_and_takeoff(aTargetAltitude):
     vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
 
     while True:
-        msgTo_log_server(" Altitude: ", vehicle.location.global_relative_frame.alt)
+        print(" Altitude: ", vehicle.location.global_relative_frame.alt)
         # Break and return from function just below target altitude.
         if vehicle.location.global_relative_frame.alt >= aTargetAltitude * 0.95:
-            msgTo_log_server("Reached target altitude")
+            print("Reached target altitude")
             break
         time.sleep(1)
 def send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
@@ -190,7 +190,7 @@ def drone_fly(lati, longi):
 
         i = 4  # start altitude to move 4M
 
-        msgTo_log_server("(Go)Set default/target airspeed to 3")
+        msgTo_log_server("(Go)Set default/target airspeed to 2")
         vehicle.airspeed = 2
 
         msgTo_log_server("(Go)Angle Positioning and move toward")  # move to next point
@@ -201,7 +201,7 @@ def drone_fly(lati, longi):
         flytime=0
         while flytime <= 40:
 
-            if 100 <= dist <= 300:  # 3M from obstacle
+            if 120 <= dist <= 300:  # 3M from obstacle
                 msgTo_log_server("(Go)Detect Obstacle")
 
                 i = i + 1
@@ -211,7 +211,7 @@ def drone_fly(lati, longi):
                     # Break and return from function just below target altitude.
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
-                                         thrust=0.6)
+                                         thrust=0.7)
                     if vehicle.location.global_relative_frame.alt >= i * 0.95:
                         msgTo_log_server("(Go)Reached target altitude")
                         break
@@ -223,7 +223,7 @@ def drone_fly(lati, longi):
                 time.sleep(1)
 
             dist = distance()
-            if 100 <= dist <= 300:
+            if 120 <= dist <= 300:
                 msgTo_log_server("(Go)Vehicle from Obstacle : " + str(dist))
             flytime = time.time() - starttime
             # For a complete implementation of follow me you'd want adjust this delay
@@ -266,6 +266,7 @@ def drone_land(lati, longi):
         while True:
 
             i = i - 1
+            print(find_point)       # to print center or not
 
             if vehicle.location.global_relative_frame.alt<=1:
                 msgTo_log_server("(L)Set General Landing Mode")
@@ -308,7 +309,7 @@ def drone_land(lati, longi):
         vehicle.close()
 
 # Using thread to connect HPC image processing server and Web server
-## Thread 1
+## Thread 1     for send video
 def send_To_HPC_Imgserver(sock):
     print("Connect to Image Processing Server")
     try:
@@ -346,7 +347,7 @@ def send_To_HPC_Imgserver(sock):
         img_clientSocket.close()
     finally:
         img_clientSocket.close()
-## Thread 2
+## Thread 2     for landing data
 def recv_From_HPC_Imgserver(sock):
     global land_point
     while True:
