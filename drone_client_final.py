@@ -438,7 +438,7 @@ if __name__=="__main__":
 
     ## Image processing Server(HPC)
     # send drone cam image to HPC image processing server and get landing data from HPC server
-    IMG_SERVER_IP = "192.168.0.6"   # HPC Image Processing server IP
+    IMG_SERVER_IP = "192.168.1.221"   # HPC Image Processing server IP
     IMG_SERVER_PORT = 22044    # HPC external port 22044(10011)
     img_clientSocket = socket(AF_INET, SOCK_STREAM)
     img_clientSocket.connect((IMG_SERVER_IP, IMG_SERVER_PORT))
@@ -447,7 +447,7 @@ if __name__=="__main__":
     try:
         ## Log Server (HPC)
         # send drone log(altitude, arrive point point etc..) to Log server
-        Log_SERVER_IP = "192.168.0.6"  # Log Server IP
+        Log_SERVER_IP = "192.168.1.221"  # Log Server IP
         Log_SERVER_PORT = 22045
         log_clientSocket = socket(AF_INET, SOCK_STREAM)
         log_clientSocket.connect((Log_SERVER_IP, Log_SERVER_PORT))
