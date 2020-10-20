@@ -158,7 +158,7 @@ if __name__=="__main__":
     ## here, Client role 1(Image)
     # then this program is client to send image to Web Server
     WebSERVER_IP = '116.89.189.55'  # image Web server IP
-    WebSERVER_PORT = 10003  # to send image to Web(10004 external port)
+    WebSERVER_PORT = 22043  # to send image to Web(10004 external port)
     ## Connect to Web Server for Image
     Img_Web = socket(AF_INET, SOCK_STREAM)
     try:
@@ -168,7 +168,7 @@ if __name__=="__main__":
             ## here, Client role 2(Log)
             # then this program is client to send log to Web Server
             WebSERVER_IP = '116.89.189.55'  # log Web server IP
-            WebSERVER_PORT2 = 10006  # to send log to Web(10004 external port)
+            WebSERVER_PORT2 = 22046  # to send log to Web(10004 external port)
             ## Connect to Web Server for Log
             Log_Web = socket(AF_INET, SOCK_STREAM)
 
@@ -177,7 +177,7 @@ if __name__=="__main__":
             try:
                 # Image Server(Koren vm)
                 HPCServer_IP = "127.0.0.1"
-                HPCServer_PORT = 10004
+                HPCServer_PORT = 22044
                 serverSocket = socket(AF_INET, SOCK_STREAM)
                 serverSocket.bind((HPCServer_IP,HPCServer_PORT))
                 serverSocket.listen(1)
@@ -188,7 +188,7 @@ if __name__=="__main__":
                 try:
                     # Log server(Koren vm)
                     HPCServer_IP = "116.89.189.55"
-                    HPCServer_PORT2 = 10005
+                    HPCServer_PORT2 = 22045
                     serverSocket2 = socket(AF_INET, SOCK_STREAM)
                     serverSocket2.bind((HPCServer_IP, HPCServer_PORT2))
                     serverSocket2.listen(1)
