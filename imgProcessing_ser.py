@@ -176,7 +176,7 @@ if __name__=="__main__":
             print("Connect to Web for Log!")
             try:
                 # Image Server(Koren vm)
-                HPCServer_IP = "127.0.0.1"
+                HPCServer_IP = "172.17.0.3"
                 HPCServer_PORT = 22044
                 serverSocket = socket(AF_INET, SOCK_STREAM)
                 serverSocket.bind((HPCServer_IP,HPCServer_PORT))
@@ -187,7 +187,7 @@ if __name__=="__main__":
 
                 try:
                     # Log server(Koren vm)
-                    HPCServer_IP = "116.89.189.55"
+                    HPCServer_IP = "172.17.0.3"
                     HPCServer_PORT2 = 22045
                     serverSocket2 = socket(AF_INET, SOCK_STREAM)
                     serverSocket2.bind((HPCServer_IP, HPCServer_PORT2))
@@ -214,11 +214,11 @@ if __name__=="__main__":
 
                 except Exception as e:
                     print(e)
-                    connectionSocket2.close()  # 서버 닫기
+                    connectionSocket2.close()  # close server
                     serverSocket2.close()
             except Exception as e:
                 print(e)
-                connectionSocket.close()    # 서버 닫기
+                connectionSocket.close()    # close server
                 serverSocket.close()
         except Exception as e:
             print(e)
