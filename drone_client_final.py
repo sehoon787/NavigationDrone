@@ -336,7 +336,7 @@ def send_To_HPC_Imgserver(sock):
         cam.set(3, 690);
         cam.set(4, 480);
         # image quality range : 0~100, set 90 (default = 95)
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 80]
 
         while True:
             # get 1 frame
