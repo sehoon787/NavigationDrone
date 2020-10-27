@@ -10,8 +10,11 @@ import numpy
 import threading
 from socket import *
 import RPi.GPIO as GPIO     # RaspberryPi lib
+import sys
 
 client_index = 6  # the number of client. Add 1 to use path information(for Home base and to return)
+locationsTo_Web = ""    # to send TSP path to Web server
+land_point = "Center"
 
 clat = 0
 clong = 0
@@ -34,14 +37,14 @@ print("Vehicle Connect")
 
 
 # get TSP path from TSP HCP server
-# not thread
+## not thread
 def get_TSP_path():
     global locationsTo_Web
     #   To get shortest visiting path by using HPC TSP algorithm and point
     #   Client socket connection to HPC TSP Server
     msg = tsp_client_socket.recv(256)  # get message from server
 
-    print("Connect Drone to Server!")
+    print("Connect Drone to HPC Server!")
 
     msg = str(msg)
     locations = msg.split('\'')
@@ -103,23 +106,23 @@ def arm_and_takeoff(aTargetAltitude):
     Arms vehicle and fly to aTargetAltitude.
     """
 
-    msgTo_server("Basic pre-arm checks")
+    msgTo_log_server("Basic pre-arm checks")
     # Don't try to arm until autopilot is ready
     while not vehicle.is_armable:
-        msgTo_server(" Waiting for vehicle to initialise...")
+        msgTo_log_server(" Waiting for vehicle to initialise...")
         time.sleep(1)
 
-    msgTo_server("Arming motors")
+    msgTo_log_server("Arming motors")
     # Copter should arm in GUIDED mode
     vehicle.mode = VehicleMode("GUIDED")
     vehicle.armed = True
 
     # Confirm vehicle armed before attempting to take off
     while not vehicle.armed:
-        msgTo_server(" Waiting for arming...")
+        msgTo_log_server(" Waiting for arming...")
         time.sleep(1)
 
-    msgTo_server("Taking off!")
+    msgTo_log_server("Taking off!")
     vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
 
     while True:
@@ -186,15 +189,15 @@ def to_quaternion(roll=0.0, pitch=0.0, yaw=0.0):
 def drone_fly(lati, longi):
     global clat, clong
     try:
-        msgTo_server("(Go)Take off!")
+        msgTo_log_server("(Go)Take off!")
         arm_and_takeoff(2)  # take off altitude 2M
 
-        i = 3  # start altitude to move 4M
+        i = 4  # start altitude to move 4M
 
-        msgTo_server("(Go)Set default/target airspeed to 3")
-        vehicle.airspeed = 1
+        msgTo_log_server("(Go)Set default/target airspeed to 3")
+        vehicle.airspeed = 3
 
-        msgTo_server("(Go)Angle Positioning and move toward")  # move to next point
+        msgTo_log_server("(Go)Angle Positioning and move toward")  # move to next point
 
         dist = 1000
 
@@ -203,43 +206,45 @@ def drone_fly(lati, longi):
         while flytime <= 30:
 
             if 150 <= dist <= 400:  # 4M from obstacle
-                msgTo_server("(Go)Detect Obstacle")
+                msgTo_log_server("(Go)Detect Obstacle")
 
                 i = i + 1
-                msgTo_server("(Go)Up to : " + str(i))
+                msgTo_log_server("(Go)Up to : " + str(i))
                 while True:
-                    msgTo_server("(Go)Altitude : " + str(vehicle.location.global_relative_frame.alt))
+                    msgTo_log_server("(Go)Altitude : " + str(vehicle.location.global_relative_frame.alt))
                     # Break and return from function just below target altitude.
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
-                                         thrust=0.6)
+                                         thrust=0.7)
                     clat = vehicle.location.global_relative_frame.lat
                     clong = vehicle.location.global_relative_frame.lon
                     if vehicle.location.global_relative_frame.alt >= i * 0.95:
-                        msgTo_server("(Go)Reached target altitude")
+                        msgTo_log_server("(Go)Reached target altitude")
                         break
                     time.sleep(1)
             else:
-                msgTo_server("(Go)Go Forward")
+                msgTo_log_server("(Go)Go Forward")
                 loc_point = LocationGlobalRelative(lati, longi, i)
-                vehicle.simple_goto(loc_point, groundspeed=1)
+                vehicle.simple_goto(loc_point, groundspeed=3)
                 clat = vehicle.location.global_relative_frame.lat
                 clong = vehicle.location.global_relative_frame.lon
                 time.sleep(1)
 
             dist = distance()
-            # if 150 <= dist <= 400:
-            msgTo_server("(Go)Vehicle to Obstacle : " + str(dist))
+            if 150 <= dist:
+                msgTo_log_server("(Go)Vehicle to Obstacle : " + str(dist))
             flytime = time.time() - starttime
             # For a complete implementation of follow me you'd want adjust this delay
 
-        msgTo_server("(L)Set General Landing Mode")
-        vehicle.mode = VehicleMode("LAND")
-        time.sleep(1)
+        #msgTo_web("(L)Set General Landing Mode")
+        #vehicle.mode = VehicleMode("LAND")
+        #time.sleep(1)
 
-        msgTo_server("Close vehicle object")
+        drone_land(lati, longi)     # image processing landing
+
+        msgTo_log_server("(Go)Close vehicle object")
         vehicle.close()
-        msgTo_server("Ready to leave to next Landing Point")
+        msgTo_log_server("(Go)Ready to leave to next Landing Point")
     except Exception as e:  # when socket connection failed
         print(e)
         print("EMERGENCY LAND!!")
@@ -248,37 +253,96 @@ def drone_fly(lati, longi):
         print("Close vehicle object")
         vehicle.close()
     except KeyboardInterrupt:
-        msgTo_server("EMERGENCY LAND!!")
+        msgTo_log_server("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
-        msgTo_server("Close vehicle object")
+        msgTo_log_server("Close vehicle object")
+        vehicle.close()
+def drone_land(lati, longi):
+    global land_point, clat, clong, vehicle
+    try:
+        msgTo_log_server("(L)Setting Landing Mode!")
+
+        msgTo_log_server("(L)Set airspeed 1m/s")
+        vehicle.airspeed = 1
+
+        msgTo_log_server("(L)Target Panel Detect : " + str(land_point))
+        find_point = str(land_point)
+
+        i = vehicle.location.global_relative_frame.alt  # current altitude
+
+        while True:
+
+            i = i - 1
+            print(find_point)       # to print center or not
+
+            if vehicle.location.global_relative_frame.alt <= 1:     # if altitude is less than 1m
+                msgTo_log_server("(L)Set General Landing Mode")
+                vehicle.mode = VehicleMode("LAND")
+                time.sleep(1)
+                break
+            elif find_point == "Center":  # down to i-1 M from Landing point, Drone on right landing point
+                msgTo_log_server("(L)Set Precision Landing Mode(Center)")
+
+                while True:
+                    msgTo_log_server("(L)Altitude : " + str(vehicle.location.global_relative_frame.alt))
+                    # Break and return from function just below target altitude.
+                    send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
+                                         yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
+                                         thrust=0.4)
+
+                    clat = vehicle.location.global_relative_frame.lat
+                    clong = vehicle.location.global_relative_frame.lon
+
+                    if vehicle.location.global_relative_frame.alt >= i * 0.95:
+                        msgTo_log_server("(L)Reached target altitude")
+                        break
+                    time.sleep(1)
+            else:       # if Drone is not on right landing point, then move to right point
+                msgTo_log_server("(L)Finding Landing Point Target")
+
+                clat = vehicle.location.global_relative_frame.lat
+                clong = vehicle.location.global_relative_frame.lon
+
+                msgTo_log_server("(L)Altitude : " + str(vehicle.location.global_relative_frame.alt))
+                loc_point = LocationGlobalRelative(lati, longi, i)
+                vehicle.simple_goto(loc_point, groundspeed=1)
+                # Send a new target every two seconds
+                # For a complete implementation of follow me you'd want adjust this delay
+                time.sleep(3)
+    except Exception as e:  # when socket connection failed
+        print(e)
+        print("EMERGENCY LAND!!")
+        vehicle.mode = VehicleMode("LAND")
+        time.sleep(1)
+        print("Close vehicle object")
+        vehicle.close()
+    except KeyboardInterrupt:
+        msgTo_log_server("EMERGENCY LAND!!")
+        vehicle.mode = VehicleMode("LAND")
+        time.sleep(1)
+        msgTo_log_server("Close vehicle object")
         vehicle.close()
 
-
 # Using thread to connect HPC image processing server and Web server
-## Thread 1
-def send_img_Toserver(sock):
-    global clat, clong
-
-    print("Connect to Server")
+## Thread 1     for send video
+def send_To_HPC_Imgserver(sock):
+    print("Connect to Image Processing Server")
     try:
-
-        ## webcam 이미지 capture
+        # to send drone cam image to HPC image processing server
+        # PI camera image capture
         cam = cv2.VideoCapture(0)
-
-        ## 이미지 속성 변경 3 = width, 4 = height
+        # Frame size 3 = width, 4 = height
         cam.set(3, 690);
         cam.set(4, 480);
-
-        ## 0~100에서 90의 이미지 품질로 설정 (default = 95)
+        # image quality range : 0~100, set 90 (default = 95)
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 
         while True:
-            # 비디오의 한 프레임씩 읽는다.
-            # 제대로 읽으면 ret = True, 실패면 ret = False, frame에는 읽은 프레임
+            # get 1 frame
+            # Success ret = True, Fail ret = False, frame = read frame
 
             ret, frame = cam.read()
-
             font = cv2.FONT_HERSHEY_COMPLEX
 
             #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -287,67 +351,75 @@ def send_img_Toserver(sock):
             cv2.putText(frame, "Longitude : " + str(clong), (20, 50), font, 1, (0, 255, 255), 1, cv2.LINE_4)
 
             # cv2. imencode(ext, img [, params])
-            # encode_param의 형식으로 frame을 jpg로 이미지를 인코딩한다.
+            # encode_param format, frame to jpg image encode
             result, frame = cv2.imencode('.jpg', frame, encode_param)
-            # frame을 String 형태로 변환
+            # convert frame to String type
             data = numpy.array(frame)
             stringData = data.tobytes()
 
-            # 서버에 데이터 전송
+            # send data to HPC image processing server
             # (str(len(stringData))).encode().ljust(16)
-            img_Client_socket.sendall((str(len(stringData))).encode().ljust(16) + stringData)
+            img_clientSocket.sendall((str(len(stringData))).encode().ljust(16) + stringData)
 
     except:  # when socket connection failed
         print("Socket Close!!")
         cam.release()
-        img_Client_socket.close()
+        img_clientSocket.close()
     finally:
-        img_Client_socket.close()
+        img_clientSocket.close()
+## Thread 2     for landing data
+def recv_From_HPC_Imgserver(sock):
+    global land_point
+    while True:
+        data = img_clientSocket.recv(1024)
+        land_point = data.decode("utf-8")
+        time.sleep(1)
 
-def msgTo_server(msg_to_web):  # make message to HPC image processing server
+
+def msgTo_log_server(msg_to_web):  # make message to HPC image processing server
     global vehicle
-    msg_to_web = msg_to_web + ", Lat : " + str(clat) + ", Lng : " + str(clong)
-    log_Client_socket.sendall(str(msg_to_web).encode("utf-8"))
+    msg_to_web = msg_to_web + "-Lat : " + str(clat) + "-Lng : " + str(clong)
+    log_clientSocket.sendall(str(msg_to_web).encode("utf-8"))
     print(str(msg_to_web))
 
-    data = log_Client_socket.recv(1024)
+    data = log_clientSocket.recv(1024)
     data = data.decode("utf-8")
     print(str(data))
 ## Thread 3
 # Move drone for TSP path and send log data to Web
-def send_log_Toserver(sock):
+def send_To_HPC_Logserver(sock):
     global vehicle
     #   To send Drone log, video and other information to Web Server
     #   Client socket connection to Web Server
     try:
         print("Connect Drone to Web Server!")
+        msgTo_log_server(locationsTo_Web)
 
         num = 0  # Current Target point to send Server
 
-        msgTo_server("Start to move")  # convert num to string type     send 1 to server
+        msgTo_log_server("Start to move")  # convert num to string type     send 1 to server
 
-        # 1  start Drone delivery.    The number of point(including Home base) : 6
-        while num < client_index:  # loop 6 times, manipulate it when you test this system
+        # 1  start Drone delivery.    The number of point(including Home base) : 12
+        while num < client_index:  # loop 12 times, manipulate it when you test this system
             num = num + 1     # to move first(1) point
             drone_fly(latitude[num], longitude[num])
             point = str(latitude[num]) + '/' + str(longitude[num])
-            msgTo_server(point)
+            msgTo_log_server(point)
             point = "Target " + str(num) + " arrive"
-            msgTo_server(point)
+            msgTo_log_server(point)
             time.sleep(1)
             if num < client_index:
                 vehicle = connect("/dev/ttyACM0", wait_ready=True, baud=57600)
-                msgTo_server("Vehicle Reconnect!")
+                msgTo_log_server("Vehicle Reconnect!")
             elif num == client_index - 1:
-                msgTo_server("Return To Base")
-                GPIO.cleanup()
+                msgTo_log_server("Return To Base")
 
         # 2(Finish Drone delivery)
-        msgTo_server("Mission Complete!")
-        msgTo_server("Finish")
+        msgTo_log_server("Completed to Delivery")
+        msgTo_log_server("Finish")
 
-        msgTo_server("arrive")
-        log_Client_socket.close()  # close socket connection
+        msgTo_log_server("arrive")
+        log_clientSocket.close()  # close socket connection
 
         ### End Drone Delivery System
 
@@ -358,16 +430,16 @@ def send_log_Toserver(sock):
         time.sleep(1)
         print("Close vehicle object")
         vehicle.close()
-        log_Client_socket.close()
+        log_clientSocket.close()
     except KeyboardInterrupt:
         print("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
         print("Close vehicle object")
         vehicle.close()
-        log_Client_socket.close()
+        log_clientSocket.close()
     finally:
-        log_Client_socket.close()
+        log_clientSocket.close()
 
 
 
@@ -375,8 +447,8 @@ if __name__=="__main__":
 
     # socket connection address and port for Koren VM TSP server
     # get shortest path data from Koren VM TSP server
-    TSP_SERVER_IP = "192.168.1.221"  # Koren VM TSP server IP
-    TSP_SERVER_PORT = 2204
+    TSP_SERVER_IP = "116.89.189.55"  # Koren VM TSP server IP
+    TSP_SERVER_PORT = 22042
     SIZE = 512
     tsp_client_socket = socket(AF_INET, SOCK_STREAM)
     tsp_client_socket.connect((TSP_SERVER_IP, TSP_SERVER_PORT))
@@ -387,33 +459,35 @@ if __name__=="__main__":
 
     ######## Start flying Drone ########
 
-    ## HPC Image processing Server(Image)
+    ## Image processing Server(HPC)
     # send drone cam image to HPC image processing server and get landing data from HPC server
-    IMG_SERVER_IP = "192.168.1.221"   # Koren VM Image Processing server IP
+    IMG_SERVER_IP = "192.168.1.221"   # HPC Image Processing server IP
     IMG_SERVER_PORT = 22044    # HPC external port 22044(10011)
-    img_Client_socket = socket(AF_INET, SOCK_STREAM)
-    img_Client_socket.connect((IMG_SERVER_IP, IMG_SERVER_PORT))
+    img_clientSocket = socket(AF_INET, SOCK_STREAM)
+    img_clientSocket.connect((IMG_SERVER_IP, IMG_SERVER_PORT))
 
 
     try:
-        ## Web Server(Log)
-        # send drone log(altitude, arrive point point etc..) to Web server
-        Web_SERVER_IP = "192.168.1.221"  # koren SDI VM IP
-        Web_SERVER_PORT = 22045
-        log_Client_socket = socket(AF_INET, SOCK_STREAM)
-        log_Client_socket.connect((Web_SERVER_IP, Web_SERVER_PORT))
+        ## Log Server (HPC)
+        # send drone log(altitude, arrive point point etc..) to Log server
+        Log_SERVER_IP = "192.168.1.221"  # Log Server IP
+        Log_SERVER_PORT = 22045
+        log_clientSocket = socket(AF_INET, SOCK_STREAM)
+        log_clientSocket.connect((Log_SERVER_IP, Log_SERVER_PORT))
 
         try:
             ##   Declare Thread
-            # Log to Server Thread
-            sendLog = threading.Thread(target=send_log_Toserver, args=(log_Client_socket,))
-            # Image to Server Thread
-            sendImg = threading.Thread(target=send_img_Toserver, args=(img_Client_socket,))
+            # Log Server Thread
+            sendLog = threading.Thread(target=send_To_HPC_Logserver, args=(log_clientSocket,))
+            # Image Processing Server Thread
+            sendImg = threading.Thread(target=send_To_HPC_Imgserver, args=(img_clientSocket,))
+            receiver = threading.Thread(target=recv_From_HPC_Imgserver, args=(img_clientSocket,))
 
             ##  Start Thread
-            # Image to Server Thread
+            # Image Processing Server Thread
             sendImg.start()
-            # Log to Server Thread
+            receiver.start()
+            # Log Server Thread
             sendLog.start()
 
 
@@ -427,17 +501,17 @@ if __name__=="__main__":
             time.sleep(1)
             print("Close vehicle object")
             GPIO.cleanup()
-            img_Client_socket.close()
+            img_clientSocket.close()
         except KeyboardInterrupt:
-            msgTo_server("EMERGENCY Return!!")
+            msgTo_log_server("EMERGENCY Return!!")
             loc_point = LocationGlobalRelative(latitude[0], longitude[0], 3)
             vehicle.simple_goto(loc_point, groundspeed=3)
             time.sleep(10)
             vehicle.mode = VehicleMode("LAND")
             time.sleep(1)
-            msgTo_server("Close vehicle object")
+            msgTo_log_server("Close vehicle object")
             GPIO.cleanup()
-            img_Client_socket.close()
+            img_clientSocket.close()
     except Exception as e:  # when socket connection failed
         print(e)
         print("EMERGENCY LAND!!")
@@ -445,14 +519,14 @@ if __name__=="__main__":
         time.sleep(1)
         print("Close vehicle object")
         GPIO.cleanup()
-        log_Client_socket.close()
+        log_clientSocket.close()
     except KeyboardInterrupt:
-        msgTo_server("EMERGENCY Return!!")
+        msgTo_log_server("EMERGENCY Return!!")
         loc_point = LocationGlobalRelative(latitude[0], longitude[0], 3)
         vehicle.simple_goto(loc_point, groundspeed=3)
         time.sleep(10)
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
-        msgTo_server("Close vehicle object")
+        msgTo_log_server("Close vehicle object")
         GPIO.cleanup()
-        log_Client_socket.close()
+        log_clientSocket.close()
