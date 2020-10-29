@@ -18,6 +18,7 @@ land_point = "Center"
 
 clat = 0
 clong = 0
+calt = 0
 
 latitude = []
 longitude = []
@@ -164,12 +165,12 @@ def to_quaternion(roll=0.0, pitch=0.0, yaw=0.0):
 
     return [w, x, y, z]
 def drone_fly(lati, longi):
-    global clat, clong
+    global clat, clong, calt
     try:
         msgTo_log_server("(Go)Take off!")
         arm_and_takeoff(2)  # take off altitude 2M
 
-        i = 4  # start altitude to move 4M
+        i = 3  # start altitude to move 4M
 
         msgTo_log_server("(Go)Set default/target airspeed to 3")
         vehicle.airspeed = 3
@@ -182,7 +183,7 @@ def drone_fly(lati, longi):
         flytime=0
         while flytime <= 30:
 
-            if 150 <= dist <= 400:  # 4M from obstacle
+            if 150 <= dist <= 300:  # 4M from obstacle
                 msgTo_log_server("(Go)Detect Obstacle")
 
                 i = i + 1
@@ -195,6 +196,7 @@ def drone_fly(lati, longi):
                                          thrust=0.7)
                     clat = vehicle.location.global_relative_frame.lat
                     clong = vehicle.location.global_relative_frame.lon
+                    calt = vehicle.location.global_relative_frame.alt
                     if vehicle.location.global_relative_frame.alt >= i * 0.95:
                         msgTo_log_server("(Go)Reached target altitude")
                         break
@@ -205,6 +207,7 @@ def drone_fly(lati, longi):
                 vehicle.simple_goto(loc_point, groundspeed=3)
                 clat = vehicle.location.global_relative_frame.lat
                 clong = vehicle.location.global_relative_frame.lon
+                calt = vehicle.location.global_relative_frame.alt
                 time.sleep(1)
 
             dist = distance()
@@ -236,7 +239,7 @@ def drone_fly(lati, longi):
         msgTo_log_server("Close vehicle object")
         vehicle.close()
 def drone_land(lati, longi):
-    global land_point, clat, clong, vehicle
+    global land_point, clat, clong, calt, vehicle
     try:
         msgTo_log_server("(L)Setting Landing Mode!")
 
@@ -270,6 +273,7 @@ def drone_land(lati, longi):
 
                     clat = vehicle.location.global_relative_frame.lat
                     clong = vehicle.location.global_relative_frame.lon
+                    calt = vehicle.location.global_relative_frame.alt
 
                     if vehicle.location.global_relative_frame.alt >= i * 0.95:
                         msgTo_log_server("(L)Reached target altitude")
@@ -280,6 +284,7 @@ def drone_land(lati, longi):
 
                 clat = vehicle.location.global_relative_frame.lat
                 clong = vehicle.location.global_relative_frame.lon
+                calt = vehicle.location.global_relative_frame.alt
 
                 msgTo_log_server("(L)Altitude : " + str(vehicle.location.global_relative_frame.alt))
                 loc_point = LocationGlobalRelative(lati, longi, i)
@@ -324,8 +329,9 @@ def send_To_HPC_Imgserver(sock):
 
             #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            cv2.putText(frame, "Latitude : " + str(clat), (20, 30), font, 1, (0, 255, 255), 1, cv2.LINE_4)
-            cv2.putText(frame, "Longitude : " + str(clong), (20, 50), font, 1, (0, 255, 255), 1, cv2.LINE_4)
+            cv2.putText(frame, "Lat : " + str(clat), (20, 30), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
+            cv2.putText(frame, "Long : " + str(clong), (20, 60), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
+            cv2.putText(frame, "Alt : " + str(clong), (20, 90), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
 
             # cv2. imencode(ext, img [, params])
             # encode_param format, frame to jpg image encode
