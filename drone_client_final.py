@@ -331,7 +331,7 @@ def send_To_HPC_Imgserver(sock):
 
             cv2.putText(frame, "Lat : " + str(clat), (20, 30), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
             cv2.putText(frame, "Long : " + str(clong), (20, 60), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
-            cv2.putText(frame, "Alt : " + str(clong), (20, 90), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
+            cv2.putText(frame, "Alt : " + str(calt) + "m", (20, 90), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
 
             # cv2. imencode(ext, img [, params])
             # encode_param format, frame to jpg image encode
