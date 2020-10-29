@@ -10,7 +10,7 @@ import numpy
 import threading
 from socket import *
 import RPi.GPIO as GPIO     # RaspberryPi lib
-import sys
+import serial
 
 client_index = 6  # the number of client. Add 1 to use path information(for Home base and to return)
 locationsTo_Web = ""    # to send TSP path to Web server
@@ -23,14 +23,7 @@ latitude = []
 longitude = []
 
 ## Raspberry pi setting
-# GPIO Mode (BOARD / BCM)
-GPIO.setmode(GPIO.BCM)
-# set GPIO Pins
-GPIO_TRIGGER = 26
-GPIO_ECHO = 19
-# set GPIO direction (IN / OUT)
-GPIO.setup(GPIO_TRIGGER, GPIO.OUT)
-GPIO.setup(GPIO_ECHO, GPIO.IN)
+ser = serial.Serial("/dev/ttyS0", 115200)
 
 vehicle = connect('/dev/ttyACM0', wait_ready=True, baud=57600)
 print("Vehicle Connect")
@@ -73,29 +66,13 @@ def get_TSP_path():
 # get distance from obstacle to Drone by using sonar sensor
 ## not thread
 def distance():
-    # set Trigger to HIGH
-    GPIO.output(GPIO_TRIGGER, True)
+    counter = ser.in_waiting
+    if counter > 8:
+        bytes_serial = ser.read(9)
+        ser.reset_input_buffer()
 
-    # set Trigger after 0.01ms to LOW
-    time.sleep(0.00001)
-    GPIO.output(GPIO_TRIGGER, False)
-
-    StartTime = time.time()
-    StopTime = time.time()
-
-    # save StartTime
-    while GPIO.input(GPIO_ECHO) == 0:
-        StartTime = time.time()
-
-    # save time of arrival
-    while GPIO.input(GPIO_ECHO) == 1:
-        StopTime = time.time()
-
-    # time difference between start and arrival
-    TimeElapsed = StopTime - StartTime
-    # multiply with the sonic speed (34300 cm/s)
-    # and divide by 2, because there and back
-    distance = (TimeElapsed * 34300) / 2
+        if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
+            distance = bytes_serial[2] + bytes_serial[3] * 256
 
     return distance
 
@@ -444,6 +421,10 @@ def send_To_HPC_Logserver(sock):
 
 
 if __name__=="__main__":
+
+    # connect lidar to raspberry pi 4
+    if ser.isOpen() == False:
+        ser.open()
 
     # socket connection address and port for Koren VM TSP server
     # get shortest path data from Koren VM TSP server
