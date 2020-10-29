@@ -19,6 +19,7 @@ land_point = "Center"
 clat = 0
 clong = 0
 calt = 0
+dist = 1000
 
 latitude = []
 longitude = []
@@ -67,16 +68,17 @@ def get_TSP_path():
 # get distance from obstacle to Drone by using sonar sensor
 ## not thread
 def distance():
-    counter = ser.in_waiting
-    if counter > 8:
-        bytes_serial = ser.read(9)
-        ser.reset_input_buffer()
+    global dist
+    while True:
+        counter = ser.in_waiting
+        if counter > 8:
+            bytes_serial = ser.read(9)
+            ser.reset_input_buffer()
 
-        if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
-            distance = bytes_serial[2] + bytes_serial[3] * 256
-
-    return distance
-
+            if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
+                dist = bytes_serial[2] + bytes_serial[3] * 256
+                time.sleep(0.5)
+                return dist
 
 ## Drone Control function
 def arm_and_takeoff(aTargetAltitude):
@@ -165,7 +167,7 @@ def to_quaternion(roll=0.0, pitch=0.0, yaw=0.0):
 
     return [w, x, y, z]
 def drone_fly(lati, longi):
-    global clat, clong, calt
+    global clat, clong, calt, dist
     try:
         msgTo_log_server("(Go)Take off!")
         arm_and_takeoff(2)  # take off altitude 2M
@@ -210,7 +212,7 @@ def drone_fly(lati, longi):
                 calt = vehicle.location.global_relative_frame.alt
                 time.sleep(1)
 
-            dist = distance()
+            distance()
             if 150 <= dist:
                 msgTo_log_server("(Go)Vehicle to Obstacle : " + str(dist))
             flytime = time.time() - starttime
@@ -329,9 +331,9 @@ def send_To_HPC_Imgserver(sock):
 
             #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            cv2.putText(frame, "Lat : " + str(clat), (20, 30), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
-            cv2.putText(frame, "Long : " + str(clong), (20, 60), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
-            cv2.putText(frame, "Alt : " + str(calt) + "m", (20, 90), font, 0.5, (255, 255, 255), 1.5, cv2.LINE_4)
+            cv2.putText(frame, "Lat : " + str(clat), (20, 30), font, 0.5, (255, 255, 255), 1, cv2.LINE_4)
+            cv2.putText(frame, "Long : " + str(clong), (20, 60), font, 0.5, (255, 255, 255), 1, cv2.LINE_4)
+            cv2.putText(frame, "Alt : " + str(calt) + "m", (20, 90), font, 0.5, (255, 255, 255), 1, cv2.LINE_4)
 
             # cv2. imencode(ext, img [, params])
             # encode_param format, frame to jpg image encode
@@ -383,7 +385,7 @@ def send_To_HPC_Logserver(sock):
         msgTo_log_server("Start to move")  # convert num to string type     send 1 to server
 
         # 1  start Drone delivery.    The number of point(including Home base) : 12
-        while num < client_index:  # loop 12 times, manipulate it when you test this system
+        while num < client_index-1:  # loop 12 times, manipulate it when you test this system
             num = num + 1     # to move first(1) point
             drone_fly(latitude[num], longitude[num])
             point = str(latitude[num]) + '/' + str(longitude[num])
@@ -391,12 +393,13 @@ def send_To_HPC_Logserver(sock):
             point = "Target " + str(num) + " arrive"
             msgTo_log_server(point)
             time.sleep(1)
-            if num < client_index:
-                vehicle = connect("/dev/ttyACM0", wait_ready=True, baud=57600)
-                msgTo_log_server("Vehicle Reconnect!")
-            elif num == client_index - 1:
+            vehicle = connect("/dev/ttyACM0", wait_ready=True, baud=57600)
+            msgTo_log_server("Vehicle Reconnect!")
+            if num == client_index - 2:
                 msgTo_log_server("Return To Base")
 
+        time.sleep(1)
+        vehicle.close()
         # 2(Finish Drone delivery)
         msgTo_log_server("Completed to Delivery")
         msgTo_log_server("Finish")
