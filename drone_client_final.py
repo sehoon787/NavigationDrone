@@ -19,7 +19,7 @@ land_point = "Center"
 clat = 0
 clong = 0
 calt = 0
-dist = 1000
+dist = 0
 
 latitude = []
 longitude = []
@@ -109,7 +109,7 @@ def arm_and_takeoff(aTargetAltitude):
         print(" Altitude: ", vehicle.location.global_relative_frame.alt)
         # Break and return from function just below target altitude.
         if vehicle.location.global_relative_frame.alt >= aTargetAltitude * 0.95:
-            print("Reached target altitude")
+            msgTo_log_server("Reached target altitude")
             break
         time.sleep(1)
 def send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
@@ -172,7 +172,7 @@ def drone_fly(lati, longi):
         msgTo_log_server("(Go)Take off!")
         arm_and_takeoff(2)  # take off altitude 2M
 
-        i = 3  # start altitude to move 4M
+        i = 3  # start altitude to move 3M
 
         msgTo_log_server("(Go)Set default/target airspeed to 3")
         vehicle.airspeed = 3
@@ -363,7 +363,7 @@ def recv_From_HPC_Imgserver(sock):
 
 def msgTo_log_server(msg_to_web):  # make message to HPC image processing server
     global vehicle
-    msg_to_web = msg_to_web + "-Lat : " + str(clat) + "-Lng : " + str(clong)
+    msg_to_web = msg_to_web + ", Lat : " + str(clat) + ", Lng : " + str(clong)
     log_clientSocket.sendall(str(msg_to_web).encode("utf-8"))
     print(str(msg_to_web))
 
