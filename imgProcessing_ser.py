@@ -5,7 +5,8 @@ from socket import *
 import cv2
 import numpy as np
 import time
-import base64
+# from pymongo import MongoClient
+# import gridfs
 
 msg_to_drone = "Center"
 logdata = "{\"log\":\"empty\"}"
@@ -21,11 +22,7 @@ def recvall(sock, count):
         count -= len(newbuf)
     return buf
 
-def send_To_Drone(sock):     # send landing data to Drone
-    while True:
-        sock.send(msg_to_drone.encode("utf-8"))
-        time.sleep(3)
-
+# Thread 1
 def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send image to KorenVM Web Server
     try:
         global msg_to_drone
@@ -46,6 +43,8 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
             lower = np.array([0, 208, 94], dtype="uint8")
             upper = np.array([179, 255, 232], dtype="uint8")
             mask = cv2.inRange(frame, lower, upper)
+
+            cv2.imwrite("data.jpg", frame)
 
             # Find contours
             cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -94,7 +93,7 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
 
             # cv2.imshow("mask", mask)
             cv2.imshow("original", original)
-            cv2.imwrite("data.jpg", original)
+            cv2.imwrite("imgProcessing_data.jpg", original)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -107,7 +106,20 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
     finally:
         Img_Web.close()
 
-def get_log_from_Drone(port):
+# Thraed 2
+def send_log_to_Web(sock):
+    while True:
+        Log_Web.send(logdata.encode("utf-8"))
+        Log_Web.recv(1024)
+
+# Thread 3
+def send_To_Drone(sock):     # send landing data to Drone
+    while True:
+        sock.send(msg_to_drone.encode("utf-8"))
+        time.sleep(1)
+
+# Thread 4
+def get_log_from_Drone(sock):
     global logdata
 
     while logdata!="arrive":
@@ -126,34 +138,39 @@ def get_log_from_Drone(port):
     Img_Web.close()
     print("Connect Finish")
 
-def send_log_to_Web(port):
-    while True:
-        Log_Web.send(logdata.encode("utf-8"))
-        Log_Web.recv(1024)
 
-#def send_img_to_Web(port):
-    # to send Web server
-    # while True:
-    #     image_path = "./data.jpg"
-    #
-    #     if image_path != '':
-    #         with open(image_path, "rb") as imageFile:
-    #             image_data = base64.b64encode(imageFile.read())
-    #     else:
-    #         image_data = 'cusdom_image'
-    #
-    #     Img_Web.send(image_data)
 
-    # image = cv2.imread("data.jpg")
-    # encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-    # imgencode = cv2.imencode(".jpg", image, encode_param)
-    # data = np.array(imgencode)
-    # b64img = base64.b64encode(data)
-    # Img_Web.send(b64img)
+#def save_img_to_DB(port):
+    # # read the image and convert it to RGB
+    # image = cv2.imread('./data.jpg')
+    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # # convert ndarray to string
+    # imageString = image.tostring()
+    # # store the image
+    # imageID = fs.put(imageString, encoding='utf-8')
+    # # create our image meta data
+    # meta = {
+    #     'name': 'droneCam',
+    #     'images': [
+    #         {
+    #             'imageID': imageID,
+    #             'shape': image.shape,
+    #             'dtype': str(image.dtype)
+    #         }
+    #     ]
+    # }
+    # # insert the meta data
+    # imgCollection.insert_one(meta)
 
 if __name__=="__main__":
 
     print("Start Image processing Server")
+
+    # # access to mongo DB
+    # client = MongoClient('localhost', 27017)
+    # db = client['droneCam']
+    # imgCollection = db['droneImageCollection']
+    # fs = gridfs.GridFS(db)
 
     ## here, Client role 1(Image)
     # then this program is client to send image to Web Server
@@ -196,10 +213,14 @@ if __name__=="__main__":
                     connectionSocket2, addr2 = serverSocket2.accept()
                     print("Connect Drone!")
 
-                    receiver = threading.Thread(target=recv_video_from_Drone, args=(connectionSocket,))  # 영상 수신 및 전송 쓰레드
-                    sender = threading.Thread(target=send_To_Drone, args=(connectionSocket,))  # 영상처리결과 송신 쓰레드
-                    log = threading.Thread(target=get_log_from_Drone, args=(connectionSocket2,))  # 로그 수신 쓰레드
-                    sendlog = threading.Thread(target=send_log_to_Web, args=(HPCServer_PORT2,))  # 로그 전송 쓰레드
+                    # 영상 수신 및 전송 쓰레드, 22043(VM-DB), 22044(drone-VM)
+                    receiver = threading.Thread(target=recv_video_from_Drone, args=(Img_Web,))  # connectionSocket
+                    # 로그 전송 쓰레드, 22046(VM-DB)
+                    sendlog = threading.Thread(target=send_log_to_Web, args=(Log_Web,))
+                    # 영상처리결과 송신 쓰레드, 22044(drone-VM)    드론으로부터 영싱 수신 쓰레드와 동일 소켓
+                    sender = threading.Thread(target=send_To_Drone, args=(connectionSocket,))
+                    # 로그 수신 쓰레드, 22045(drone-VM)
+                    log = threading.Thread(target=get_log_from_Drone, args=(connectionSocket2,))
                     #sendImg = threading.Thread(target=send_img_to_Web, args=(HPCServer_PORT2,))  # 영상 전송 쓰레드
 
                     receiver.start()
