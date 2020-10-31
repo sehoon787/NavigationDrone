@@ -9,7 +9,7 @@ import cv2
 import numpy
 import threading
 from socket import *
-import RPi.GPIO as GPIO     # RaspberryPi lib
+# import RPi.GPIO as GPIO     # RaspberryPi lib
 import serial
 
 client_index = 6  # the number of client. Add 1 to use path information(for Home base and to return)
@@ -77,7 +77,7 @@ def distance():
 
             if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
                 dist = bytes_serial[2] + bytes_serial[3] * 256
-                time.sleep(0.5)
+                ser.reset_input_buffer()
                 return dist
 
 ## Drone Control function
@@ -185,7 +185,7 @@ def drone_fly(lati, longi):
         flytime=0
         while flytime <= 30:
 
-            if 150 <= dist <= 300:  # 4M from obstacle
+            if 150 <= dist <= 300:  # 3M from obstacle
                 msgTo_log_server("(Go)Detect Obstacle")
 
                 i = i + 1
@@ -437,7 +437,7 @@ if __name__=="__main__":
 
     # socket connection address and port for Koren VM TSP server
     # get shortest path data from Koren VM TSP server
-    TSP_SERVER_IP = "116.89.189.55"  # Koren VM TSP server IP
+    TSP_SERVER_IP = "192.168.1.221"  # Koren VM TSP server IP
     TSP_SERVER_PORT = 22042
     SIZE = 512
     tsp_client_socket = socket(AF_INET, SOCK_STREAM)
@@ -490,17 +490,18 @@ if __name__=="__main__":
             vehicle.mode = VehicleMode("LAND")
             time.sleep(1)
             print("Close vehicle object")
-            GPIO.cleanup()
+            # GPIO.cleanup()
             img_clientSocket.close()
         except KeyboardInterrupt:
             msgTo_log_server("EMERGENCY Return!!")
+            msgTo_log_server("***********************\nPlease wait for 10 sec to return!!\n***********************")
             loc_point = LocationGlobalRelative(latitude[0], longitude[0], 3)
             vehicle.simple_goto(loc_point, groundspeed=3)
             time.sleep(10)
             vehicle.mode = VehicleMode("LAND")
             time.sleep(1)
             msgTo_log_server("Close vehicle object")
-            GPIO.cleanup()
+            # GPIO.cleanup()
             img_clientSocket.close()
     except Exception as e:  # when socket connection failed
         print(e)
@@ -508,15 +509,12 @@ if __name__=="__main__":
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
         print("Close vehicle object")
-        GPIO.cleanup()
+        # GPIO.cleanup()
         log_clientSocket.close()
     except KeyboardInterrupt:
-        msgTo_log_server("EMERGENCY Return!!")
-        loc_point = LocationGlobalRelative(latitude[0], longitude[0], 3)
-        vehicle.simple_goto(loc_point, groundspeed=3)
-        time.sleep(10)
+        print("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
         time.sleep(1)
         msgTo_log_server("Close vehicle object")
-        GPIO.cleanup()
+        # GPIO.cleanup()
         log_clientSocket.close()
