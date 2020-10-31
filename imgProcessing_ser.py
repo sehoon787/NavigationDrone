@@ -44,7 +44,7 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
             upper = np.array([179, 255, 232], dtype="uint8")
             mask = cv2.inRange(frame, lower, upper)
 
-            cv2.imwrite("data.jpg", frame)
+            cv2.imwrite("data.jpg", original)
 
             # Find contours
             cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
