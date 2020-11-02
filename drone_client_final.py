@@ -178,7 +178,7 @@ def drone_fly(lati, longi):
         i = 3  # start altitude to move 3M
 
         msgTo_log_server("(Go)Set default/target airspeed to 3")
-        vehicle.airspeed = 3
+        vehicle.airspeed = 1
 
         msgTo_log_server("(Go)Angle Positioning and move toward")  # move to next point
 
@@ -209,7 +209,7 @@ def drone_fly(lati, longi):
             else:
                 msgTo_log_server("(Go)Go Forward")
                 loc_point = LocationGlobalRelative(lati, longi, i)
-                vehicle.simple_goto(loc_point, groundspeed=3)
+                vehicle.simple_goto(loc_point, groundspeed=1)
                 clat = vehicle.location.global_relative_frame.lat
                 clong = vehicle.location.global_relative_frame.lon
                 calt = vehicle.location.global_relative_frame.alt
