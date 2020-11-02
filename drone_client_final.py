@@ -69,17 +69,20 @@ def get_TSP_path():
 ## not thread
 def distance():
     global dist
-    while True:
-        counter = ser.in_waiting
-        if counter > 8:
-            bytes_serial = ser.read(9)
-            ser.reset_input_buffer()
-
-            if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
-                dist = bytes_serial[2] + bytes_serial[3] * 256
+    try:
+        while True:
+            counter = ser.in_waiting
+            if counter > 8:
+                bytes_serial = ser.read(9)
                 ser.reset_input_buffer()
-                return dist
 
+                if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
+                    dist = bytes_serial[2] + bytes_serial[3] * 256
+                    ser.reset_input_buffer()
+                    return dist
+    except Exception as e:
+        print("Ignore this Error!!" + str(e))
+        return 0
 ## Drone Control function
 def arm_and_takeoff(aTargetAltitude):
     """
