@@ -182,13 +182,13 @@ def drone_fly(lati, longi):
 
         msgTo_log_server("(Go)Angle Positioning and move toward")  # move to next point
 
-        dist = 1000
+        dist = 0
 
         starttime=time.time()
         flytime=0
         while flytime <= 30:
 
-            if 150 <= dist <= 300:  # 3M from obstacle
+            if 150 <= dist <= 400:  # 4M from obstacle
                 msgTo_log_server("(Go)Detect Obstacle")
 
                 i = i + 1
@@ -198,7 +198,7 @@ def drone_fly(lati, longi):
                     # Break and return from function just below target altitude.
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
-                                         thrust=0.7)
+                                         thrust=0.6)
                     clat = vehicle.location.global_relative_frame.lat
                     clong = vehicle.location.global_relative_frame.lon
                     calt = vehicle.location.global_relative_frame.alt
@@ -323,7 +323,7 @@ def send_To_HPC_Imgserver(sock):
         cam.set(3, 690);
         cam.set(4, 480);
         # image quality range : 0~100, set 90 (default = 95)
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 80]
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 
         while True:
             # get 1 frame
