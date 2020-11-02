@@ -8,7 +8,7 @@ import time
 # from pymongo import MongoClient
 # import gridfs
 
-msg_to_drone = "Center"
+msg_to_drone = "Land"
 logdata = "{\"log\":\"empty\"}"
 
 # function to return received buffer from socket
