@@ -36,7 +36,7 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
 if __name__ == "__main__":
     try:
         # Image Server(Koren vm)
-        WebServer_IP = "116.89.189.55"
+        WebServer_IP = "116.89.189.31"
         WebServer_PORT = 22043
         serverSocket = socket(AF_INET, SOCK_STREAM)
         serverSocket.bind((WebServer_IP, WebServer_PORT))
