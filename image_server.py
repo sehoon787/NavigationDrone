@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
         receiver.start()
 
-        os.system("node index.js")
+        os.system("node /root/work/web/index.js")
 
         while True:
             time.sleep(1)  # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌
