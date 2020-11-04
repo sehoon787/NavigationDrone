@@ -153,6 +153,7 @@ if __name__=="__main__":
         Img_Web.connect((WebSERVER_IP, WebSERVER_PORT))
         print("Connect to Web for Image!")
         try:
+            time.sleep(3)
             ## here, Client role 2(Log)
             # then this program is client to send log to Web Server
             WebSERVER_IP = '116.89.189.31'  # log Web server IP
