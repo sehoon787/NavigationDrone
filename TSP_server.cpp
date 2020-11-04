@@ -245,6 +245,7 @@ int main()
    // end of Socket connection
    cout <<  "\nDisconnect!! Bye~!\n\n";   // Drone client socket connection finish
 
+   system("python3 ./imgProcessing_ser.py");
    return 0;
 }
 
