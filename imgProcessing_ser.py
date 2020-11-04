@@ -1,4 +1,4 @@
-## Web server가 Drone Client로 부터 로그 메세지 수신 확인
+## Middle Server
 
 import threading
 from socket import *
@@ -139,42 +139,13 @@ def get_log_from_Drone(sock):
     print("Connect Finish")
 
 
-
-#def save_img_to_DB(port):
-    # # read the image and convert it to RGB
-    # image = cv2.imread('./data.jpg')
-    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # # convert ndarray to string
-    # imageString = image.tostring()
-    # # store the image
-    # imageID = fs.put(imageString, encoding='utf-8')
-    # # create our image meta data
-    # meta = {
-    #     'name': 'droneCam',
-    #     'images': [
-    #         {
-    #             'imageID': imageID,
-    #             'shape': image.shape,
-    #             'dtype': str(image.dtype)
-    #         }
-    #     ]
-    # }
-    # # insert the meta data
-    # imgCollection.insert_one(meta)
-
 if __name__=="__main__":
 
     print("Start Image processing Server")
 
-    # # access to mongo DB
-    # client = MongoClient('localhost', 27017)
-    # db = client['droneCam']
-    # imgCollection = db['droneImageCollection']
-    # fs = gridfs.GridFS(db)
-
     ## here, Client role 1(Image)
     # then this program is client to send image to Web Server
-    WebSERVER_IP = '192.168.1.247'  # image Web server IP
+    WebSERVER_IP = '116.89.189.31'  # image Web server IP
     WebSERVER_PORT = 22043  # to send image to Web(10004 external port)
     ## Connect to Web Server for Image
     Img_Web = socket(AF_INET, SOCK_STREAM)
@@ -184,7 +155,7 @@ if __name__=="__main__":
         try:
             ## here, Client role 2(Log)
             # then this program is client to send log to Web Server
-            WebSERVER_IP = '192.168.1.247'  # log Web server IP
+            WebSERVER_IP = '116.89.189.31'  # log Web server IP
             WebSERVER_PORT2 = 22046  # to send log to Web(10004 external port)
             ## Connect to Web Server for Log
             Log_Web = socket(AF_INET, SOCK_STREAM)
@@ -193,7 +164,7 @@ if __name__=="__main__":
             print("Connect to Web for Log!")
             try:
                 # Image Server(Koren vm)
-                HPCServer_IP = "192.168.1.221"
+                HPCServer_IP = "116.89.189.55"
                 HPCServer_PORT = 22044
                 serverSocket = socket(AF_INET, SOCK_STREAM)
                 serverSocket.bind((HPCServer_IP,HPCServer_PORT))
@@ -204,7 +175,7 @@ if __name__=="__main__":
 
                 try:
                     # Log server(Koren vm)
-                    HPCServer_IP = "192.168.1.221"
+                    HPCServer_IP = "116.89.189.55"
                     HPCServer_PORT2 = 22045
                     serverSocket2 = socket(AF_INET, SOCK_STREAM)
                     serverSocket2.bind((HPCServer_IP, HPCServer_PORT2))
