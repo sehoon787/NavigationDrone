@@ -92,7 +92,7 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
                     #print(msg_to_drone)
 
             # cv2.imshow("mask", mask)
-            cv2.imshow("original", original)
+            cv2.imshow("imgProcessing", original)
             cv2.imwrite("imgProcessing_data.jpg", original)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
