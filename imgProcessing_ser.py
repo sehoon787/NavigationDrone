@@ -121,11 +121,18 @@ def send_To_Drone(sock):     # send landing data to Drone
 # Thread 4
 def get_log_from_Drone(sock):
     global logdata
-
+    cnt = 0
     while logdata!="arrive":
         logdata = connectionSocket2.recv(1024)
         logdata = str(logdata).split("b'", 1)[1].rsplit("'", 1)[0]
-        logdata = "{\"log\":\"" + logdata + "\"}"
+        if cnt == 0:
+            logdata = "{\"order\":\"" + logdata + "\"}"
+            cnt = cnt + 1
+        elif cnt == 1:
+            logdata = "{\"time\":\"" + logdata + "\"}"
+            cnt = cnt + 1
+        else:
+            logdata = "{\"log\":\"" + logdata + "\"}"
         print(logdata)
         ## send receive message to drone
         connectionSocket2.sendall(str("Server Get!").encode("utf-8"))
