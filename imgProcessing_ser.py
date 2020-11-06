@@ -44,7 +44,7 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
             upper = np.array([179, 255, 232], dtype="uint8")
             mask = cv2.inRange(frame, lower, upper)
 
-            cv2.imwrite("data.jpg", original)
+            cv2.imwrite("./original.jpg", original)
 
             # Find contours
             cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -129,10 +129,10 @@ def get_log_from_Drone(sock):
             logdata = "{\"order\":\"" + logdata + "\"}"
             cnt = cnt + 1
         elif cnt == 1:
-            logdata = "{\"time\":\"" + logdata + "\"}"
-            cnt = cnt + 1
+            logdata = "{\"dist\":\"" + logdata + "\"}"
+            cnt = cnt + 2
         else:
-            logdata = "{\"log\":\"" + logdata + "\"}"
+            logdata = "{\"log\":[\"" + logdata + "\"] }"
         print(logdata)
         ## send receive message to drone
         connectionSocket2.sendall(str("Server Get!").encode("utf-8"))
