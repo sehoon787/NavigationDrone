@@ -122,7 +122,7 @@ def send_To_Drone(sock):     # send landing data to Drone
 def get_log_from_Drone(sock):
     global logdata
     cnt = 0
-    while logdata!="Arrive":
+    while logdata!="Finish":
         logdata = connectionSocket2.recv(1024)
         logdata = str(logdata).split("b'", 1)[1].rsplit("'", 1)[0]
         if cnt == 0:
