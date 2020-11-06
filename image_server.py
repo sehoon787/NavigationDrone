@@ -28,7 +28,7 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
         frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
         original = frame.copy()
 
-        cv2.imwrite('/root/work/NavigationDrone/original.jpg', original)
+        cv2.imwrite('./original.jpg', original)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
