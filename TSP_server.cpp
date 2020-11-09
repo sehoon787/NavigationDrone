@@ -164,7 +164,6 @@ int main()
    }
 
    cout << "\nCurrent Client : " << client_index-1 << "\n";
-   sleep(3);
    close(server_sock);
 
 
@@ -241,7 +240,8 @@ int main()
 
    cout << "\nSucess! Sending Path message to Drone.\n";
 
-   close(client_sock2);
+   sleep(3);
+//   close(client_sock2);
    close(server_sock2);
    // end of Socket connection
    cout <<  "\nDisconnect!! Bye~!\n\n";   // Drone client socket connection finish
