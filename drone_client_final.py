@@ -89,6 +89,7 @@ def get_TSP_path():
     distanceTo_Web = distanceTo_Web + "/".join(flydistance)
 
     tsp_client_socket.close()
+    time.sleep(1)
 
 # get distance from obstacle to Drone by using sonar sensor
 ## not thread
@@ -553,78 +554,69 @@ if __name__=="__main__":
     tsp_client_socket.connect((TSP_SERVER_IP, TSP_SERVER_PORT))
     # to get TSP path from Koren VM TSP server
     get_TSP_path()
-    print("Wait 3 second..")
-    time.sleep(3)
-
 
     ######## Start flying Drone ########
-
-    ## Image processing Server(HPC)
-    # send drone cam image to HPC image processing server and get landing data from HPC server
-    IMG_SERVER_IP = "116.89.189.55"   # HPC Image Processing server IP(Middle)
-    IMG_SERVER_PORT = 22044    # HPC external port 22044(10011)
-    img_clientSocket = socket(AF_INET, SOCK_STREAM)
-    img_clientSocket.connect((IMG_SERVER_IP, IMG_SERVER_PORT))
-
-
     try:
-        ## Log Server (HPC)
-        # send drone log(altitude, arrive point point etc..) to Log server
-        Log_SERVER_IP = "116.89.189.55"  # Log Server IP(Middle)
-        Log_SERVER_PORT = 22045
-        log_clientSocket = socket(AF_INET, SOCK_STREAM)
-        log_clientSocket.connect((Log_SERVER_IP, Log_SERVER_PORT))
+        ## Image processing Server(HPC)
+        # send drone cam image to HPC image processing server and get landing data from HPC server
+        IMG_SERVER_IP = "116.89.189.55"   # HPC Image Processing server IP(Middle)
+        IMG_SERVER_PORT = 22044    # HPC external port 22044(10011)
+        img_clientSocket = socket(AF_INET, SOCK_STREAM)
+        img_clientSocket.connect((IMG_SERVER_IP, IMG_SERVER_PORT))
 
+        time.sleep(3)
         try:
-            ##   Declare Thread
-            # Log Server Thread
-            sendLog = threading.Thread(target=send_To_HPC_Logserver, args=(log_clientSocket,))
-            # Image Processing Server Thread
-            sendImg = threading.Thread(target=send_To_HPC_Imgserver, args=(img_clientSocket,))
-            receiver = threading.Thread(target=recv_From_HPC_Imgserver, args=(img_clientSocket,))
+            ## Log Server (HPC)
+            # send drone log(altitude, arrive point point etc..) to Log server
+            Log_SERVER_IP = "116.89.189.55"  # Log Server IP(Middle)
+            Log_SERVER_PORT = 22045
+            log_clientSocket = socket(AF_INET, SOCK_STREAM)
+            log_clientSocket.connect((Log_SERVER_IP, Log_SERVER_PORT))
 
-            ##  Start Thread
-            # Image Processing Server Thread
-            sendImg.start()
-            receiver.start()
-            # Log Server Thread
-            sendLog.start()
+            try:
+                ##   Declare Thread
+                # Log Server Thread
+                sendLog = threading.Thread(target=send_To_HPC_Logserver, args=(log_clientSocket,))
+                # Image Processing Server Thread
+                sendImg = threading.Thread(target=send_To_HPC_Imgserver, args=(img_clientSocket,))
+                receiver = threading.Thread(target=recv_From_HPC_Imgserver, args=(img_clientSocket,))
+
+                ##  Start Thread
+                # Image Processing Server Thread
+                sendImg.start()
+                receiver.start()
+                # Log Server Thread
+                sendLog.start()
 
 
-            while True:
-                time.sleep(1)   # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌(1 일때)
-                pass            # sleep(0)은 cpu 선점권을 풀지 않음
+                while True:
+                    time.sleep(1)   # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌(1 일때)
+                    pass            # sleep(0)은 cpu 선점권을 풀지 않음
+
+                log_clientSocket.close()
+                img_clientSocket.close()
+            except Exception as e:  # when socket connection failed
+                print(e)
+                print("EMERGENCY LAND!!")
+                vehicle.mode = VehicleMode("LAND")
+                time.sleep(1)
+                print("Close vehicle object")
+                GPIO.cleanup()
+                log_clientSocket.close()
+                img_clientSocket.close()
+            except KeyboardInterrupt:
+                msgTo_log_server("EMERGENCY Return!!")
+                msgTo_log_server("***********************\nPlease wait for 10 sec to return!!\n***********************")
+                loc_point = LocationGlobalRelative(latitude[0], longitude[0], 3)
+                vehicle.simple_goto(loc_point, groundspeed=3)
+                time.sleep(10)
+                vehicle.mode = VehicleMode("LAND")
+                time.sleep(1)
+                msgTo_log_server("Close vehicle object")
+                GPIO.cleanup()
+                log_clientSocket.close()
+                img_clientSocket.close()
         except Exception as e:  # when socket connection failed
             print(e)
-            print("EMERGENCY LAND!!")
-            vehicle.mode = VehicleMode("LAND")
-            time.sleep(1)
-            print("Close vehicle object")
-            GPIO.cleanup()
-            img_clientSocket.close()
-        except KeyboardInterrupt:
-            msgTo_log_server("EMERGENCY Return!!")
-            msgTo_log_server("***********************\nPlease wait for 10 sec to return!!\n***********************")
-            loc_point = LocationGlobalRelative(latitude[0], longitude[0], 3)
-            vehicle.simple_goto(loc_point, groundspeed=3)
-            time.sleep(10)
-            vehicle.mode = VehicleMode("LAND")
-            time.sleep(1)
-            msgTo_log_server("Close vehicle object")
-            GPIO.cleanup()
-            img_clientSocket.close()
     except Exception as e:  # when socket connection failed
         print(e)
-        print("EMERGENCY LAND!!")
-        vehicle.mode = VehicleMode("LAND")
-        time.sleep(1)
-        print("Close vehicle object")
-        GPIO.cleanup()
-        log_clientSocket.close()
-    except KeyboardInterrupt:
-        print("EMERGENCY LAND!!")
-        vehicle.mode = VehicleMode("LAND")
-        time.sleep(1)
-        msgTo_log_server("Close vehicle object")
-        GPIO.cleanup()
-        log_clientSocket.close()
