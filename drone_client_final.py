@@ -208,14 +208,18 @@ def drone_fly(lati, longi):
 
         msgTo_log_server("(Go)Angle Positioning and move toward")  # move to next point
 
-        dist = 0
-
         starttime=time.time()
         flytime=0
         endtime = int(flydistance[visitOrder])/int(airspeed) + 10
         visitOrder = visitOrder + 1
         msgTo_log_server("(Go)Flying time : " + str(endtime))
+
         while flytime <= endtime:
+
+            distance()
+            if 150 <= dist:
+                msgTo_log_server("(Go)Vehicle to Obstacle : " + str(dist))
+
             if 150 <= dist <= 400:  # 4M from obstacle
                 msgTo_log_server("(Go)Detect Obstacle")
 
@@ -243,9 +247,6 @@ def drone_fly(lati, longi):
                 calt = vehicle.location.global_relative_frame.alt
                 time.sleep(1)
 
-            distance()
-            if 150 <= dist:
-                msgTo_log_server("(Go)Vehicle to Obstacle : " + str(dist))
             flytime = time.time() - starttime
             # For a complete implementation of follow me you'd want adjust this delay
 
@@ -490,7 +491,7 @@ def send_To_HPC_Logserver(sock):
         msgTo_log_server("Start to move")  # convert num to string type     send 1 to server
 
         # 1  start Drone delivery.    The number of point(including Home base) : 12
-        while num < client_index-1:  # loop 12 times, manipulate it when you test this system
+        while num < client_index:  # loop 12 times, manipulate it when you test this system
             num = num + 1     # to move first(1) point
             drone_fly(latitude[num], longitude[num])
             point = str(latitude[num]) + '/' + str(longitude[num])
@@ -501,7 +502,7 @@ def send_To_HPC_Logserver(sock):
             time.sleep(5)
             vehicle = connect("/dev/ttyACM0", wait_ready=True, baud=57600)
             msgTo_log_server("Vehicle Reconnect!")
-            if num == client_index - 2:
+            if num == client_index - 1:
                 msgTo_log_server("Return To Base")
 
         time.sleep(1)
