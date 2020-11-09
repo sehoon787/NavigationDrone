@@ -133,7 +133,7 @@ int main()
       client_sock = accept(server_sock, (struct sockaddr*) & client_addr, (socklen_t*)& client_addr_size);
       current_user++;
       cout << "==================================================\nClient Addr " << inet_ntoa(client_addr.sin_addr)
-     << "is Waiting\nZCurrent waiting User : " << current_user << "\nPort : " << ntohs(client_addr.sin_port)
+     << "is Waiting\nCurrent waiting User : " << current_user << "\nPort : " << ntohs(client_addr.sin_port)
      << "\n==================================================\n";
 
       if (client_sock < 0)
@@ -166,9 +166,6 @@ int main()
    cout << "\nCurrent Client : " << client_index-1 << "\n";
    close(server_sock);
 
-
-
-
    // TSP algorithm
    double dist[real_user][real_user];   // To save distance calculating result from Android Client
 
@@ -185,22 +182,25 @@ int main()
    course = new int[real_user + 1];      // course dynamic memory allocation
    takeInput(real_user, dist);
 
-    cout << "\n\nDelivery Client order => ";
+   cout << "\n\nDelivery Client order => ";
    mincost(0, real_user, dist, course); //passing 0 because starting vertex
 
    cout << "\nDelivery Drone Zone Path";
     for(i=0; i < coursenum+1 ; i++){
         cout << " => " << from_user[course[i]].pointNum;
+
+        snddata.append(to_string(from_user[course[i]].latitude));
+        snddata.append("/");
+        snddata.append(to_string(from_user[course[i]].longitude));
+        snddata.append("/");
     }
-    cout << fixed;
+
+   cout << fixed;
    cout.precision(2);
    cout << "\n\nMinimum cost is " << cost << "m\n";
 
-   snddata = makemsg(snddata, targetdata);
    const char* msg = snddata.c_str();      // convert snddata to char type message
    // TSP algorithm finish and making path and message done
-
-
 
 
    // Drone socket connection start
@@ -332,29 +332,6 @@ void mincost(int city, int points, double cordinates[real_user][real_user], int*
    }
 
    mincost(ncity, points, cordinates, course);
-}
-
-string makemsg(string snddata, struct Target targetdata[]) {
-   int i, j;
-
-   for (i = 0; i < coursenum; i++) {
-      for (j = 0; j < 21; j++) {
-        if (course[i] == atoi((targetdata + j)->pointNum)) {
-            snddata.append(to_string((targetdata + j)->latitude));
-            snddata.append("/");
-            snddata.append(to_string((targetdata + j)->longitude));
-            snddata.append("/");
-            break;
-         }
-      }
-   }
-
-   snddata.append(to_string((targetdata + 0)->latitude));
-   snddata.append("/");
-   snddata.append(to_string((targetdata + 0)->longitude));
-   snddata.append("/");
-
-   return snddata;
 }
 
 void* t_function(void* arg)
