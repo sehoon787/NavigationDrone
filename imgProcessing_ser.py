@@ -206,7 +206,6 @@ if __name__=="__main__":
                     sendlog.start()
                     sender.start()
                     log.start()
-                    #sendImg.start()
 
                     while True:
                         time.sleep(1)  # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌
