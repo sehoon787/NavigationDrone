@@ -133,7 +133,7 @@ int main()
       client_sock = accept(server_sock, (struct sockaddr*) & client_addr, (socklen_t*)& client_addr_size);
       current_user++;
       cout << "==================================================\nClient Addr " << inet_ntoa(client_addr.sin_addr)
-     << "is Waiting\nCurrent waiting User : " << current_user << "\nPort : " << ntohs(client_addr.sin_port)
+     << "is Waiting\nZCurrent waiting User : " << current_user << "\nPort : " << ntohs(client_addr.sin_port)
      << "\n==================================================\n";
 
       if (client_sock < 0)
@@ -164,6 +164,7 @@ int main()
    }
 
    cout << "\nCurrent Client : " << client_index-1 << "\n";
+   sleep(3);
    close(server_sock);
 
 
