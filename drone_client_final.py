@@ -18,12 +18,11 @@ pi = 3.1415926535897932384626433832795028841971693993751
 client_index = 6  # the number of client. Add 1 to use path information(for Home base and to return)
 locationsTo_Web = ""    # to send TSP path to Web server
 distanceTo_Web = ""   # to send point to point fly time to Web server
-land_point = "Land"
+# land_point = "Land"
 
 clat = 0
 clong = 0
 calt = 0
-dist = 0
 
 latitude = []
 longitude = []
@@ -94,7 +93,6 @@ def get_TSP_path():
 # get distance from obstacle to Drone by using sonar sensor
 ## not thread
 def distance():
-    global dist
     try:
         while True:
             counter = ser.in_waiting
@@ -104,6 +102,8 @@ def distance():
 
                 if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
                     dist = bytes_serial[2] + bytes_serial[3] * 256
+                    if 150 <= dist <= 400:
+                        print("Vehicle to Obstacle : " + str(dist))
                     ser.reset_input_buffer()
                     return dist
     except Exception as e:
@@ -196,7 +196,7 @@ def to_quaternion(roll=0.0, pitch=0.0, yaw=0.0):
 
     return [w, x, y, z]
 def drone_fly(lati, longi):
-    global clat, clong, calt, dist, visitOrder
+    global clat, clong, calt, visitOrder
     try:
         msgTo_log_server("(Go)Take off!")
         arm_and_takeoff(2)  # take off altitude 2M
@@ -213,28 +213,33 @@ def drone_fly(lati, longi):
         flytime=0
         endtime = int(flydistance[visitOrder])/int(airspeed) + 10
         visitOrder = visitOrder + 1
-        msgTo_log_server("(Go)Flying time : " + str(endtime))
+        msgTo_log_server("(Go)Flying time : " + str(endtime-1))
 
         while flytime <= endtime:
 
-            distance()
+            dist = distance()
             if 150 <= dist:
-                msgTo_log_server("(Go)Vehicle to Obstacle : " + str(dist))
+                temp_lat = vehicle.location.global_relative_frame.lat
+                temp_long = vehicle.location.global_relative_frame.lon
 
             if 150 <= dist <= 400:  # 4M from obstacle
-                msgTo_log_server("(Go)Detect Obstacle")
+                msgTo_log_server("(Go)Detect Obstacle to " + str(dist) + "M")
 
                 i = i + 1
                 msgTo_log_server("(Go)Up to : " + str(i))
                 while True:
                     msgTo_log_server("(Go)Altitude : " + str(vehicle.location.global_relative_frame.alt))
                     # Break and return from function just below target altitude.
-                    send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
-                                         yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
-                                         thrust=0.6)
+                    # send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
+                    #                      yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
+                    #                      thrust=0.6)
+                    loc_point = LocationGlobalRelative(temp_lat, temp_long, i)
+                    vehicle.simple_goto(loc_point, groundspeed=1)
+
                     clat = vehicle.location.global_relative_frame.lat
                     clong = vehicle.location.global_relative_frame.lon
                     calt = vehicle.location.global_relative_frame.alt
+
                     if vehicle.location.global_relative_frame.alt >= i * 0.95:
                         msgTo_log_server("(Go)Reached target altitude")
                         break
@@ -279,22 +284,22 @@ def drone_fly(lati, longi):
         vehicle.close()
         GPIO.cleanup()
 def drone_land(lati, longi):
-    global land_point, clat, clong, calt
+    global clat, clong, calt
     try:
         msgTo_log_server("(L)Setting Landing Mode!")
 
         msgTo_log_server("(L)Set airspeed 1m/s")
         vehicle.airspeed = 1
 
-        msgTo_log_server("(L)Target Panel Detect : " + str(land_point))
-        find_point = str(land_point)
+        # msgTo_log_server("(L)Target Panel Detect : " + str(land_point))
+        # find_point = str(land_point)
 
         i = vehicle.location.global_relative_frame.alt  # current altitude
 
         while True:
 
             i = i - 1
-            print(find_point)       # to print center or not
+            # print(find_point)       # to print center or not
 
             if vehicle.location.global_relative_frame.alt <= 1:     # if altitude is less than 1m
                 msgTo_log_server("(L)Set General Landing Mode")
@@ -306,7 +311,8 @@ def drone_land(lati, longi):
 
                 time.sleep(1)
                 break
-            elif find_point == "Center":  # down to i-1 M from Landing point, Drone on right landing point
+            # down to i-1 M from Landing point, Drone on right landing point
+            elif lati == vehicle.location.global_relative_frame.lat and longi == vehicle.location.global_relative_frame.lon:
                 msgTo_log_server("(L)Simple descending Landing Mode(Center)")
 
                 while True:
@@ -379,7 +385,7 @@ class SG90_92R_Class:
     # end
     def Cleanup(self):
         # reset servo motor 90 degree
-        self.SetPos(90)
+        self.SetPos(0)
         time.sleep(1)
 # function to put mini cargo
 def put_cargo(ord):
@@ -388,7 +394,7 @@ def put_cargo(ord):
 
     time.sleep(1)
     if ord % 2 == 1:  # drone arrives odd number point, set servo motor 110degree
-        Servo0.SetPos(110)
+        Servo0.SetPos(100)
         print(" ** " + str(ord) + "point Delivery complete ** ")
         time.sleep(3)  # wait for finish
         Servo0.SetPos(0)
@@ -397,7 +403,7 @@ def put_cargo(ord):
 
 
     elif ord % 2 == 0:  #  drone arrives even number point, set servo motor 110degree
-        Servo4.SetPos(110)
+        Servo4.SetPos(100)
         print(" ** " + str(ord) + "point Delivery complete ** ")
         time.sleep(3)  # wait for finish
         Servo4.SetPos(0)
@@ -430,9 +436,9 @@ def send_To_HPC_Imgserver(sock):
 
             #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            cv2.putText(frame, "Lat : " + str(clat), (20, 30), font, 0.5, (255, 255, 255), 1, cv2.LINE_4)
-            cv2.putText(frame, "Long : " + str(clong), (20, 60), font, 0.5, (255, 255, 255), 1, cv2.LINE_4)
-            cv2.putText(frame, "Alt : " + str(calt) + "m", (20, 90), font, 0.5, (255, 255, 255), 1, cv2.LINE_4)
+            # cv2.putText(frame, "Lat : " + str(clat), (20, 30), font, 0.5, (255, 255, 255), 1, cv2.LINE_4)
+            # cv2.putText(frame, "Long : " + str(clong), (20, 60), font, 0.5, (255, 255, 255), 1, cv2.LINE_4)
+            # cv2.putText(frame, "Alt : " + str(calt) + "m", (20, 90), font, 0.5, (255, 255, 255), 1, cv2.LINE_4)
 
             # cv2. imencode(ext, img [, params])
             # encode_param format, frame to jpg image encode
@@ -452,12 +458,12 @@ def send_To_HPC_Imgserver(sock):
     finally:
         img_clientSocket.close()
 ## Thread 2     for landing data
-def recv_From_HPC_Imgserver(sock):
-    global land_point
-    while True:
-        data = img_clientSocket.recv(1024)
-        land_point = data.decode("utf-8")
-        time.sleep(1)
+# def recv_From_HPC_Imgserver(sock):
+#     global land_point
+#     while True:
+#         data = img_clientSocket.recv(1024)
+#         land_point = data.decode("utf-8")
+#         time.sleep(1)
 
 def msgTo_log_server(msg_to_web):  # make message to HPC image processing server
     global vehicle
@@ -579,12 +585,12 @@ if __name__=="__main__":
                 sendLog = threading.Thread(target=send_To_HPC_Logserver, args=(log_clientSocket,))
                 # Image Processing Server Thread
                 sendImg = threading.Thread(target=send_To_HPC_Imgserver, args=(img_clientSocket,))
-                receiver = threading.Thread(target=recv_From_HPC_Imgserver, args=(img_clientSocket,))
+                # receiver = threading.Thread(target=recv_From_HPC_Imgserver, args=(img_clientSocket,))
 
                 ##  Start Thread
                 # Image Processing Server Thread
                 sendImg.start()
-                receiver.start()
+                # receiver.start()
                 # Log Server Thread
                 sendLog.start()
 
