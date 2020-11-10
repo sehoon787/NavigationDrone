@@ -84,8 +84,8 @@ def get_TSP_path():
             temp = calculateDistance(latitude[i], longitude[i], latitude[i + 1], longitude[i + 1])
             flydistance.append(temp)
 
-    temp = list(map(str, flydistance))
-    distanceTo_Web = distanceTo_Web + "/".join(temp)
+    flydistance = list(map(str, flydistance))
+    distanceTo_Web = distanceTo_Web + "/".join(flydistance)
 
     tsp_client_socket.close()
     time.sleep(1)
@@ -477,7 +477,7 @@ def msgTo_log_server(msg_to_web):  # make message to HPC image processing server
 ## Thread 3
 # Move drone for TSP path and send log data to Web
 def send_To_HPC_Logserver(sock):
-    global vehicle
+    global vehicle, flydistance
     #   To send Drone log, video and other information to Web Server
     #   Client socket connection to Web Server
     try:
@@ -492,6 +492,8 @@ def send_To_HPC_Logserver(sock):
         log_clientSocket.sendall(str(distanceTo_Web).encode("utf-8"))
         print(str(distanceTo_Web))
         data = log_clientSocket.recv(1024)
+
+        flydistance = list(map(float, flydistance))
 
         num = 0  # Current Target point to send Server
 
