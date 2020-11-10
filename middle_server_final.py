@@ -5,10 +5,7 @@ from socket import *
 import cv2
 import numpy as np
 import time
-# from pymongo import MongoClient
-# import gridfs
 
-msg_to_drone = "Land"
 logdata = "{\"log\":\"empty\"}"
 
 # function to return received buffer from socket
@@ -25,9 +22,6 @@ def recvall(sock, count):
 # Thread 1
 def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send image to KorenVM Web Server
     try:
-        global msg_to_drone
-        cX = 0
-        cY = 0
         while True:
             # stringData size from client (==(str(len(stringData))).encode().ljust(16))
             length = recvall(connectionSocket, 16)
@@ -38,60 +32,6 @@ def recv_video_from_Drone(sock):     # get Drone cam image from Drone, and send 
 
             # Decode data
             frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
-            original = frame.copy()
-            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            # lower = np.array([0, 208, 94], dtype="uint8")
-            # upper = np.array([179, 255, 232], dtype="uint8")
-            # mask = cv2.inRange(frame, lower, upper)
-            #
-            # # Find contours
-            # cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            # # Extract contours depending on OpenCV version
-            # cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-            #
-            # # Iterate through contours and filter by the number of vertices
-            # for c in cnts:
-            #     # compute the center of the contour
-            #     M = cv2.moments(c)
-            #     try:
-            #         cX = int(M["m10"] / M["m00"])
-            #         cY = int(M["m01"] / M["m00"])
-            #     except ZeroDivisionError:
-            #         print("")
-            #
-            #     '''
-            #     # draw the contour and center of the shape on the image
-            #     # using mask is better for speed
-            #     cv2.drawContours(original, [c], -1, (0, 255, 0), 2)
-            #     cv2.circle(original, (cX, cY), 7, (255, 255, 255), -1)
-            #     if (cX >= 350 and cX <= 850) and (cY >= 200 and cY <= 600):
-            #         cv2.putText(mask, "center", (cX - 20, cY - 20),
-            #                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-            #     else:
-            #         cv2.putText(mask, "Out of Target", (cX - 20, cY - 20),
-            #                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-            #     '''
-            #
-            #     # better for watching
-            #     cv2.drawContours(original, [c], -1, (0, 255, 0), 2)
-            #     cv2.circle(original, (cX, cY), 7, (255, 255, 255), -1)
-            #
-            #     if (150 <= cX <= 410) and (120 <= cY <= 380):
-            #         cv2.putText(original, "Center", (cX - 20, cY - 20),
-            #                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-            #         #print("X : " + str(cX) + ", Y : " + str(cY))
-            #         msg_to_drone = "Center"
-            #         #print(msg_to_drone)
-            #     else:
-            #         cv2.putText(original, "Out of Target", (cX - 20, cY - 20),
-            #                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-            #         #print("X : " + str(cX) + ", Y : " + str(cY))
-            #         msg_to_drone = "Out of Target"
-            #         #print(msg_to_drone)
-
-            # cv2.imshow("mask", mask)
-            # cv2.imwrite("./imgProcessing.jpg", original)
-            # cv2.imshow("imgProcessing", original)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -109,12 +49,6 @@ def send_log_to_Web(sock):
     while True:
         Log_Web.send(logdata.encode("utf-8"))
         Log_Web.recv(1024)
-
-# Thread 3
-# def send_To_Drone(sock):     # send landing data to Drone
-#     while True:
-#         sock.send(msg_to_drone.encode("utf-8"))
-#         time.sleep(1)
 
 # Thread 4
 def get_log_from_Drone(sock):
@@ -189,11 +123,8 @@ if __name__=="__main__":
                     receiver = threading.Thread(target=recv_video_from_Drone, args=(Log_Web,))  # connectionSocket
                     # 로그 전송 쓰레드, 22046(VM-DB)
                     sendlog = threading.Thread(target=send_log_to_Web, args=(Log_Web,))
-                    # 영상처리결과 송신 쓰레드, 22044(drone-VM)    드론으로부터 영싱 수신 쓰레드와 동일 소켓
-                    # sender = threading.Thread(target=send_To_Drone, args=(connectionSocket,))
                     # 로그 수신 쓰레드, 22045(drone-VM)
                     log = threading.Thread(target=get_log_from_Drone, args=(connectionSocket2,))
-                    # sendImg = threading.Thread(target=send_img_to_Web, args=(HPCServer_PORT2,))  # 영상 전송 쓰레드
 
                     receiver.start()
                     sendlog.start()
