@@ -422,10 +422,10 @@ def send_To_HPC_Imgserver(sock):
         # PI camera image capture
         cam = cv2.VideoCapture(0)
         # Frame size 3 = width, 4 = height
-        cam.set(3, 690);
-        cam.set(4, 480);
+        cam.set(3, 360);
+        cam.set(4, 270);
         # image quality range : 0~100, set 90 (default = 95)
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 30]
 
         while True:
             # get 1 frame
