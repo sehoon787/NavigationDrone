@@ -432,7 +432,7 @@ def send_To_HPC_Imgserver(sock):
             # Success ret = True, Fail ret = False, frame = read frame
 
             ret, frame = cam.read()
-            font = cv2.FONT_HERSHEY_COMPLEX
+            #font = cv2.FONT_HERSHEY_COMPLEX
 
             #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
