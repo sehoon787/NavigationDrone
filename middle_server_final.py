@@ -135,13 +135,8 @@ def get_log_from_Drone(sock):
         ## send receive message to drone
         connectionSocket2.sendall(str("Server Get!").encode("utf-8"))
         ## send log to KorenVM Web server
-    connectionSocket2.close()
-    serverSocket2.close()
-    connectionSocket.close()
-    serverSocket.close()
-    Log_Web.close()
-    Img_Web.close()
-    print("Connect Finish")
+
+    print("Service Finish")
 
 
 if __name__=="__main__":
@@ -208,6 +203,13 @@ if __name__=="__main__":
                     while True:
                         time.sleep(1)  # thread 간의 우선순위 관계 없이 다른 thread에게 cpu를 넘겨줌
                         pass  # sleep(0)은 cpu 선점권을 풀지 않음
+
+                    connectionSocket2.close()
+                    serverSocket2.close()
+                    connectionSocket.close()
+                    serverSocket.close()
+                    Log_Web.close()
+                    Img_Web.close()
 
                 except Exception as e:
                     print(e)
