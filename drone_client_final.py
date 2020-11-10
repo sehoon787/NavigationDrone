@@ -84,8 +84,8 @@ def get_TSP_path():
             temp = calculateDistance(latitude[i], longitude[i], latitude[i + 1], longitude[i + 1])
             flydistance.append(temp)
 
-    flydistance = list(map(str, flydistance))
-    distanceTo_Web = distanceTo_Web + "/".join(flydistance)
+    temp = list(map(str, flydistance))
+    distanceTo_Web = distanceTo_Web + "/".join(temp)
 
     tsp_client_socket.close()
     time.sleep(1)
