@@ -243,6 +243,8 @@ def drone_fly(lati, longi):
                         msgTo_log_server("(Go)Reached target altitude")
                         break
                     time.sleep(1)
+
+                    dist = 0
             else:
                 msgTo_log_server("(Go)Go Forward")
                 loc_point = LocationGlobalRelative(lati, longi, i)
