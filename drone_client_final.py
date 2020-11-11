@@ -233,7 +233,7 @@ def drone_fly(lati, longi):
                     #                      yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
                     #                      thrust=0.6)
                     loc_point = LocationGlobalRelative(temp_lat, temp_long, i)
-                    vehicle.simple_goto(loc_point, groundspeed=2)
+                    vehicle.simple_goto(loc_point, groundspeed=1)
 
                     clat = vehicle.location.global_relative_frame.lat
                     clong = vehicle.location.global_relative_frame.lon
@@ -248,7 +248,7 @@ def drone_fly(lati, longi):
             else:
                 msgTo_log_server("(Go)Go Forward")
                 loc_point = LocationGlobalRelative(lati, longi, i)
-                vehicle.simple_goto(loc_point, groundspeed=1)
+                vehicle.simple_goto(loc_point, groundspeed=2)
                 clat = vehicle.location.global_relative_frame.lat
                 clong = vehicle.location.global_relative_frame.lon
                 calt = vehicle.location.global_relative_frame.alt
