@@ -326,7 +326,7 @@ def drone_land(lati, longi):
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
                                          thrust=0.4)
-                    if vehicle.location.global_relative_frame.alt >= i * 0.95:
+                    if vehicle.location.global_relative_frame.alt <= i * 0.95:
                         msgTo_log_server("(L)Reached target altitude")
                         break
 
