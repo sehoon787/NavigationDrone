@@ -253,7 +253,7 @@ if __name__ == '__main__':
 
     ## 1. 소켓통신으로 포인트 5개 받아서 배열에 저장하기
     # TSP server with Genetic Algorithm (Web Koren vm)
-    GA_TSP_server_IP = "192.168.0.6"
+    GA_TSP_server_IP = "116.89.189.31"
     GA_TSP_server_PORT = 22041
     GA_TSP = socket(AF_INET, SOCK_STREAM)
     GA_TSP.bind((GA_TSP_server_IP, GA_TSP_server_PORT))
@@ -294,7 +294,7 @@ if __name__ == '__main__':
     n_generations = 100
 
     # Load the map
-    map_original = cv2.imread('map.jpg')
+    map_original = cv2.imread('../GA/map.jpg')
 
     # Setup cities and tour
     tourmanager = TourManager()
@@ -420,7 +420,7 @@ if __name__ == '__main__':
     print(snd_msg)
 
     # Connect Drone client
-    GA_TSP_server2_IP = "192.168.0.6"
+    GA_TSP_server2_IP = "116.89.189.31"
     GA_TSP_server2_PORT = 22042
     GA_TSP2 = socket(AF_INET, SOCK_STREAM)
     GA_TSP2.bind((GA_TSP_server2_IP, GA_TSP_server2_PORT))
