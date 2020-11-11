@@ -131,7 +131,7 @@ def arm_and_takeoff(aTargetAltitude):
         msgTo_log_server(" Waiting for arming...")
         time.sleep(1)
 
-    msgTo_log_server("Taking off!")
+    msgTo_log_server("Take off!")
     vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
 
     while True:
@@ -198,22 +198,21 @@ def to_quaternion(roll=0.0, pitch=0.0, yaw=0.0):
 def drone_fly(lati, longi):
     global clat, clong, calt, visitOrder
     try:
-        msgTo_log_server("(Go)Take off!")
         arm_and_takeoff(2)  # take off altitude 2M
 
         i = 3  # start altitude to move 3M
 
         msgTo_log_server("(Go)Set default/target airspeed to 1")
-        airspeed = 1
+        airspeed = 2
         vehicle.airspeed = airspeed
 
         msgTo_log_server("(Go)Angle Positioning and move toward")  # move to next point
 
         starttime=time.time()
         flytime=0
-        endtime = int(flydistance[visitOrder])/int(airspeed) + 10
+        endtime = int(flydistance[visitOrder])/int(airspeed) + 5
         visitOrder = visitOrder + 1
-        msgTo_log_server("(Go)Flying time : " + str(endtime-1))
+        msgTo_log_server("(Go)Flying time : " + str(endtime-5))
 
         while flytime <= endtime:
 
@@ -222,7 +221,7 @@ def drone_fly(lati, longi):
                 temp_lat = vehicle.location.global_relative_frame.lat
                 temp_long = vehicle.location.global_relative_frame.lon
 
-            if 150 <= dist <= 400:  # 4M from obstacle
+            if 150 <= dist <= 500:  # 5M from obstacle
                 msgTo_log_server("(Go)Detect Obstacle to " + str(dist) + "M")
 
                 i = i + 1
@@ -234,7 +233,7 @@ def drone_fly(lati, longi):
                     #                      yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
                     #                      thrust=0.6)
                     loc_point = LocationGlobalRelative(temp_lat, temp_long, i)
-                    vehicle.simple_goto(loc_point, groundspeed=1)
+                    vehicle.simple_goto(loc_point, groundspeed=2)
 
                     clat = vehicle.location.global_relative_frame.lat
                     clong = vehicle.location.global_relative_frame.lon
@@ -262,11 +261,12 @@ def drone_fly(lati, longi):
 
         drone_land(lati, longi)     # image processing landing
 
+        msgTo_log_server("(Go)Close vehicle object")
+        vehicle.close()
+
         # put mini cargo on landing point
         put_cargo(visitOrder)
 
-        msgTo_log_server("(Go)Close vehicle object")
-        vehicle.close()
         msgTo_log_server("(Go)Ready to leave to next Landing Point")
     except Exception as e:  # when socket connection failed
         print(e)
@@ -298,10 +298,10 @@ def drone_land(lati, longi):
 
         while True:
 
-            i = i - 1
+            i = i - 0.5
             # print(find_point)       # to print center or not
 
-            if vehicle.location.global_relative_frame.alt <= 1:     # if altitude is less than 1m
+            if vehicle.location.global_relative_frame.alt <= 1.6:     # if altitude is less than 1m
                 msgTo_log_server("(L)Set General Landing Mode")
                 vehicle.mode = VehicleMode("LAND")
 
