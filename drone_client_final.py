@@ -203,7 +203,7 @@ def drone_fly(lati, longi):
         i = 3  # start altitude to move 3M
 
         msgTo_log_server("(Go)Set default/target airspeed to 1")
-        airspeed = 2
+        airspeed = 1
         vehicle.airspeed = airspeed
 
         msgTo_log_server("(Go)Angle Positioning and move toward")  # move to next point
@@ -221,7 +221,7 @@ def drone_fly(lati, longi):
                 temp_lat = vehicle.location.global_relative_frame.lat
                 temp_long = vehicle.location.global_relative_frame.lon
 
-            if 150 <= dist <= 500:  # 5M from obstacle
+            if 150 <= dist <= 600:  # 6M from obstacle
                 msgTo_log_server("(Go)Detect Obstacle to " + str(dist) + "M")
 
                 i = i + 1
@@ -241,14 +241,14 @@ def drone_fly(lati, longi):
 
                     if vehicle.location.global_relative_frame.alt >= i * 0.95:
                         msgTo_log_server("(Go)Reached target altitude")
+                        dist = 0
                         break
                     time.sleep(1)
 
-                    dist = 0
             else:
                 msgTo_log_server("(Go)Go Forward")
                 loc_point = LocationGlobalRelative(lati, longi, i)
-                vehicle.simple_goto(loc_point, groundspeed=2)
+                vehicle.simple_goto(loc_point, groundspeed=1)
                 clat = vehicle.location.global_relative_frame.lat
                 clong = vehicle.location.global_relative_frame.lon
                 calt = vehicle.location.global_relative_frame.alt
@@ -303,7 +303,10 @@ def drone_land(lati, longi):
             i = i - 0.5
             # print(find_point)       # to print center or not
 
-            if vehicle.location.global_relative_frame.alt <= 1.6:     # if altitude is less than 1m
+            if vehicle.location.global_relative_frame.alt <= 2:     # if altitude is less than 1m
+
+                time.sleep(1)
+
                 msgTo_log_server("(L)Set General Landing Mode")
                 vehicle.mode = VehicleMode("LAND")
 
@@ -346,7 +349,7 @@ def drone_land(lati, longi):
 
                 # Send a new target every two seconds
                 # For a complete implementation of follow me you'd want adjust this delay
-                time.sleep(3)
+                time.sleep(1)
 
     except Exception as e:  # when socket connection failed
         print(e)
