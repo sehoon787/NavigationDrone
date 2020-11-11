@@ -339,7 +339,7 @@ if __name__ == '__main__':
 
     # Initialize population
     pop = Population(tourmanager, populationSize=population_size, initialise=True)
-    print("Initial distance: " + str(pop.getFittest().getDistance()))
+    print("Initial cost: " + str(pop.getFittest().getDistance()))
 
     # Evolve population
     ga = GA(tourmanager)
@@ -365,9 +365,9 @@ if __name__ == '__main__':
                     fontScale=0.7, color=0, thickness=1, lineType=cv2.LINE_AA)
         cv2.putText(map_result, org=(10, 50), text='cost: %.2f' % fittest.getDistance(),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.7, color=0, thickness=1, lineType=cv2.LINE_AA)
-        cv2.imshow('map', map_result)
+        # cv2.imshow('map', map_result)
         cv2.imwrite("/root/work/web/GA.jpg", map_result)
-
+        # time.sleep(0.1)
         # if cv2.waitKey(100) == ord('q'):
         #     break
 
@@ -396,7 +396,7 @@ if __name__ == '__main__':
             make_msg.append(make_msg[0])
             make_msg.pop(0)
 
-    cv2.imshow('map', map_result)
+    # cv2.imshow('map', map_result)
     # cv2.imwrite("./GA.jpg", map_result)
     cv2.imwrite("/root/work/web/GA.jpg", map_result)
     # cv2.waitKey(0)
