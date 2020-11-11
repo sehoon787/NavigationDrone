@@ -333,7 +333,8 @@ if __name__ == '__main__':
                 break
 
     cv2.imshow('map', map_original)
-    # cv2.imwrite("/root/work/web/GA.jpg", map_original)
+    # cv2.imwrite("./GA.jpg", map_original)
+    cv2.imwrite("/root/work/web/GA.jpg", map_original)
     cv2.waitKey(0)
 
     # Initialize population
@@ -396,8 +397,8 @@ if __name__ == '__main__':
             make_msg.pop(0)
 
     cv2.imshow('map', map_result)
-    # cv2.imwrite("/root/work/web/GA.jpg", map_result)
-    cv2.waitKey(0)
+    # cv2.imwrite("./GA.jpg", map_result)
+    cv2.imwrite("/root/work/web/GA.jpg", map_result)
 
     make_msg.append(make_msg[0])
     make_msg.append(make_msg[1])
