@@ -294,7 +294,7 @@ if __name__ == '__main__':
     n_generations = 100
 
     # Load the map
-    map_original = cv2.imread('../GA/map.jpg')
+    map_original = cv2.imread('./map.jpg')
 
     # Setup cities and tour
     tourmanager = TourManager()
@@ -332,10 +332,10 @@ if __name__ == '__main__':
                 tourmanager.addCity(City(x=targetdata[j][3], y=targetdata[j][4]))
                 break
 
-    cv2.imshow('map', map_original)
+    # cv2.imshow('map', map_original)
     # cv2.imwrite("./GA.jpg", map_original)
     cv2.imwrite("/root/work/web/GA.jpg", map_original)
-    cv2.waitKey(0)
+    # cv2.waitKey(0)
 
     # Initialize population
     pop = Population(tourmanager, populationSize=population_size, initialise=True)
@@ -366,10 +366,10 @@ if __name__ == '__main__':
         cv2.putText(map_result, org=(10, 50), text='cost: %.2f' % fittest.getDistance(),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.7, color=0, thickness=1, lineType=cv2.LINE_AA)
         cv2.imshow('map', map_result)
-        # cv2.imwrite("/root/work/web/GA.jpg", map_result)
+        cv2.imwrite("/root/work/web/GA.jpg", map_result)
 
-        if cv2.waitKey(100) == ord('q'):
-            break
+        # if cv2.waitKey(100) == ord('q'):
+        #     break
 
     # Print final results
     print("Finished")
@@ -399,6 +399,7 @@ if __name__ == '__main__':
     cv2.imshow('map', map_result)
     # cv2.imwrite("./GA.jpg", map_result)
     cv2.imwrite("/root/work/web/GA.jpg", map_result)
+    # cv2.waitKey(0)
 
     make_msg.append(make_msg[0])
     make_msg.append(make_msg[1])
@@ -434,3 +435,5 @@ if __name__ == '__main__':
     connectionSocket2.send(snd_msg.encode("utf-8"))
     time.sleep(3)
     connectionSocket2.close()
+
+    print("TSP server finish.")
