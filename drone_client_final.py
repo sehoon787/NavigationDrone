@@ -102,6 +102,7 @@ def distance():
 
                 if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
                     dist = bytes_serial[2] + bytes_serial[3] * 256
+                    time.sleep(0.1)
                     if 150 <= dist <= 400:
                         print("Vehicle to Obstacle : " + str(dist))
                     ser.reset_input_buffer()
