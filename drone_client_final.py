@@ -267,7 +267,7 @@ def drone_fly(lati, longi):
         vehicle.close()
 
         # put mini cargo on landing point
-        put_cargo(visitOrder)
+        # put_cargo(visitOrder)
 
         msgTo_log_server("(Go)Ready to leave to next Landing Point")
     except Exception as e:  # when socket connection failed
@@ -549,12 +549,12 @@ def send_To_HPC_Logserver(sock):
 
 if __name__=="__main__":
 
-    # connect lidar to raspberry pi 4
-    if ser.isOpen() == False:
-        ser.open()
-
-    Servo0 = SG90_92R_Class(Channel=0, ZeroOffset=-10)
-    Servo4 = SG90_92R_Class(Channel=4, ZeroOffset=-10)
+    # # connect lidar to raspberry pi 4
+    # if ser.isOpen() == False:
+    #     ser.open()
+    #
+    # Servo0 = SG90_92R_Class(Channel=0, ZeroOffset=-10)
+    # Servo4 = SG90_92R_Class(Channel=4, ZeroOffset=-10)
 
     # socket connection address and port for Koren VM TSP server
     # get shortest path data from Koren VM TSP server
