@@ -98,13 +98,11 @@ def distance():
                 ser.reset_input_buffer()
 
                 if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
-                    dist = bytes_serial[2] + bytes_serial[3] * 256
-                    if 150 <= dist <= 500:
-                        print("Vehicle to Obstacle : " + str(dist))
+                    distance = bytes_serial[2] + bytes_serial[3]*256
+                    #print("Distance : " + str(distance))
                     ser.reset_input_buffer()
-                    return dist
+                    return distance
     except Exception as e:
-        print("Ignore this Error!!" + str(e))
         return 0
 ## Drone Control function
 def arm_and_takeoff(aTargetAltitude):
@@ -213,12 +211,11 @@ def drone_fly(lati, longi):
 
         while flytime <= endtime:
 
-            dist = distance()
-            if 150 <= dist:
+            if 150 <= dist <= 500:  # 5M from obstacle
+
                 temp_lat = vehicle.location.global_relative_frame.lat
                 temp_long = vehicle.location.global_relative_frame.lon
 
-            if 150 <= dist <= 500:  # 5M from obstacle
                 msgTo_log_server("(Go)Detect Obstacle to " + str(dist) + "M")
 
                 i = i + 1
@@ -251,6 +248,8 @@ def drone_fly(lati, longi):
                 calt = vehicle.location.global_relative_frame.alt
                 time.sleep(1)
 
+            dist = distance()
+            
             flytime = time.time() - starttime
             # For a complete implementation of follow me you'd want adjust this delay
 
@@ -321,7 +320,7 @@ def drone_land(lati, longi):
                     send_attitude_target(roll_angle=0.0, pitch_angle=0.0,
                                          yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False,
                                          thrust=0.4)
-                    if vehicle.location.global_relative_frame.alt <= i * 0.95:
+                    if vehicle.location.global_relative_frame.alt <= i * 1.05:
                         msgTo_log_server("(L)Reached target altitude")
                         break
 
