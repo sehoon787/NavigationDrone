@@ -29,9 +29,6 @@ longitude = []
 flydistance = []    # point to point distances
 visitOrder = 0
 
-## Raspberry pi setting
-ser = serial.Serial("/dev/ttyS0", 115200)
-
 vehicle = connect('/dev/ttyACM0', wait_ready=True, baud=57600)
 print("Vehicle Connect")
 
@@ -549,6 +546,8 @@ def send_To_HPC_Logserver(sock):
 
 if __name__=="__main__":
 
+    ## Raspberry pi setting for Lidar
+    ser = serial.Serial("/dev/ttyS0", 115200)
     # connect lidar to raspberry pi 4
     if ser.isOpen() == False:
         ser.open()
