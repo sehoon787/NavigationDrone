@@ -200,7 +200,7 @@ def drone_fly(lati, longi):
     try:
         arm_and_takeoff(2)  # take off altitude 2M
 
-        i = 2  # start altitude to move 3M
+        i = 3  # start altitude to move 3M
 
         msgTo_log_server("(Go)Set default/target airspeed to 1")
         airspeed = 1
