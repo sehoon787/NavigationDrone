@@ -369,22 +369,22 @@ def drone_land(lati, longi):
 # # mPin : GPIO Number (PWM)
 # # mPwm : PWM컨트롤러용 인스턴스
 # # m_Zero_offset_duty
-# 
+#
 #     def __init__(self, Channel, ZeroOffset):
 #         self.mChannel = Channel
 #         self.m_ZeroOffset = ZeroOffset
-# 
+#
 #         # Adafruit_PCA9685 init
 #         # address : I2C Channel 0x40 of PCA9685
 #         self.mPwm = Adafruit_PCA9685.PCA9685(address = 0x40)
 #         # set 50Hz, but  60Hz is better
 #         self.mPwm.set_pwm_freq(60)
-# 
+#
 #     # set servo motor position
 #     def SetPos(self, pos):
 #         pulse = (650 - 150) * pos / 180 + 150 + self.m_ZeroOffset
 #         self.mPwm.set_pwm(self.mChannel, 0, int(pulse))
-# 
+#
 #     # end
 #     def Cleanup(self):
 #         # reset servo motor 90 degree
@@ -394,7 +394,7 @@ def drone_land(lati, longi):
 # def put_cargo(ord):
 #     Servo0.SetPos(0)
 #     Servo4.SetPos(0)
-# 
+#
 #     time.sleep(1)
 #     if ord % 2 == 1:  # drone arrives odd number point, set servo motor 110degree
 #         Servo0.SetPos(100)
@@ -403,8 +403,8 @@ def drone_land(lati, longi):
 #         Servo0.SetPos(0)
 #         time.sleep(1)
 #         Servo0.Cleanup()
-# 
-# 
+#
+#
 #     elif ord % 2 == 0:  #  drone arrives even number point, set servo motor 110degree
 #         Servo4.SetPos(100)
 #         print(" ** " + str(ord) + "point Delivery complete ** ")
@@ -412,7 +412,7 @@ def drone_land(lati, longi):
 #         Servo4.SetPos(0)
 #         time.sleep(1)
 #         Servo4.Cleanup()
-# 
+#
 #     time.sleep(1)
 
 
