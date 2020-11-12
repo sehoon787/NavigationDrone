@@ -274,14 +274,14 @@ def drone_fly(lati, longi):
         print(e)
         print("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
-        time.sleep(1)
+        time.sleep(3)
         print("Close vehicle object")
         vehicle.close()
         GPIO.cleanup()
     except KeyboardInterrupt:
         msgTo_log_server("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
-        time.sleep(1)
+        time.sleep(3)
         msgTo_log_server("Close vehicle object")
         vehicle.close()
         GPIO.cleanup()
@@ -303,9 +303,7 @@ def drone_land(lati, longi):
             i = i - 0.5
             # print(find_point)       # to print center or not
 
-            if vehicle.location.global_relative_frame.alt <= 2:     # if altitude is less than 1m
-
-                time.sleep(1)
+            if vehicle.location.global_relative_frame.alt <= 1.6:     # if altitude is less than 1m
 
                 msgTo_log_server("(L)Set General Landing Mode")
                 vehicle.mode = VehicleMode("LAND")
@@ -314,7 +312,7 @@ def drone_land(lati, longi):
                 clong = vehicle.location.global_relative_frame.lon
                 calt = vehicle.location.global_relative_frame.alt
 
-                time.sleep(1)
+                time.sleep(3)
                 break
             # down to i-1 M from Landing point, Drone on right landing point
             elif lati == vehicle.location.global_relative_frame.lat and longi == vehicle.location.global_relative_frame.lon:
@@ -355,14 +353,14 @@ def drone_land(lati, longi):
         print(e)
         print("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
-        time.sleep(1)
+        time.sleep(3)
         print("Close vehicle object")
         vehicle.close()
         GPIO.cleanup()
     except KeyboardInterrupt:
         msgTo_log_server("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
-        time.sleep(1)
+        time.sleep(3)
         msgTo_log_server("Close vehicle object")
         vehicle.close()
         GPIO.cleanup()
@@ -533,14 +531,14 @@ def send_To_HPC_Logserver(sock):
         print(e)
         print("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
-        time.sleep(1)
+        time.sleep(3)
         print("Close vehicle object")
         vehicle.close()
         log_clientSocket.close()
     except KeyboardInterrupt:
         print("EMERGENCY LAND!!")
         vehicle.mode = VehicleMode("LAND")
-        time.sleep(1)
+        time.sleep(3)
         print("Close vehicle object")
         vehicle.close()
         log_clientSocket.close()
@@ -612,7 +610,7 @@ if __name__=="__main__":
                 print(e)
                 print("EMERGENCY LAND!!")
                 vehicle.mode = VehicleMode("LAND")
-                time.sleep(1)
+                time.sleep(3)
                 print("Close vehicle object")
                 GPIO.cleanup()
                 log_clientSocket.close()
@@ -624,7 +622,7 @@ if __name__=="__main__":
                 vehicle.simple_goto(loc_point, groundspeed=3)
                 time.sleep(10)
                 vehicle.mode = VehicleMode("LAND")
-                time.sleep(1)
+                time.sleep(3)
                 msgTo_log_server("Close vehicle object")
                 GPIO.cleanup()
                 log_clientSocket.close()
