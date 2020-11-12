@@ -365,55 +365,55 @@ def drone_land(lati, longi):
         vehicle.close()
         GPIO.cleanup()
 
-class SG90_92R_Class:
-# mPin : GPIO Number (PWM)
-# mPwm : PWM컨트롤러용 인스턴스
-# m_Zero_offset_duty
-
-    def __init__(self, Channel, ZeroOffset):
-        self.mChannel = Channel
-        self.m_ZeroOffset = ZeroOffset
-
-        # Adafruit_PCA9685 init
-        # address : I2C Channel 0x40 of PCA9685
-        self.mPwm = Adafruit_PCA9685.PCA9685(address = 0x40)
-        # set 50Hz, but  60Hz is better
-        self.mPwm.set_pwm_freq(60)
-
-    # set servo motor position
-    def SetPos(self, pos):
-        pulse = (650 - 150) * pos / 180 + 150 + self.m_ZeroOffset
-        self.mPwm.set_pwm(self.mChannel, 0, int(pulse))
-
-    # end
-    def Cleanup(self):
-        # reset servo motor 90 degree
-        self.SetPos(0)
-        time.sleep(1)
-# function to put mini cargo
-def put_cargo(ord):
-    Servo0.SetPos(0)
-    Servo4.SetPos(0)
-
-    time.sleep(1)
-    if ord % 2 == 1:  # drone arrives odd number point, set servo motor 110degree
-        Servo0.SetPos(100)
-        print(" ** " + str(ord) + "point Delivery complete ** ")
-        time.sleep(3)  # wait for finish
-        Servo0.SetPos(0)
-        time.sleep(1)
-        Servo0.Cleanup()
-
-
-    elif ord % 2 == 0:  #  drone arrives even number point, set servo motor 110degree
-        Servo4.SetPos(100)
-        print(" ** " + str(ord) + "point Delivery complete ** ")
-        time.sleep(3)  # wait for finish
-        Servo4.SetPos(0)
-        time.sleep(1)
-        Servo4.Cleanup()
-
-    time.sleep(1)
+# class SG90_92R_Class:
+# # mPin : GPIO Number (PWM)
+# # mPwm : PWM컨트롤러용 인스턴스
+# # m_Zero_offset_duty
+# 
+#     def __init__(self, Channel, ZeroOffset):
+#         self.mChannel = Channel
+#         self.m_ZeroOffset = ZeroOffset
+# 
+#         # Adafruit_PCA9685 init
+#         # address : I2C Channel 0x40 of PCA9685
+#         self.mPwm = Adafruit_PCA9685.PCA9685(address = 0x40)
+#         # set 50Hz, but  60Hz is better
+#         self.mPwm.set_pwm_freq(60)
+# 
+#     # set servo motor position
+#     def SetPos(self, pos):
+#         pulse = (650 - 150) * pos / 180 + 150 + self.m_ZeroOffset
+#         self.mPwm.set_pwm(self.mChannel, 0, int(pulse))
+# 
+#     # end
+#     def Cleanup(self):
+#         # reset servo motor 90 degree
+#         self.SetPos(0)
+#         time.sleep(1)
+# # function to put mini cargo
+# def put_cargo(ord):
+#     Servo0.SetPos(0)
+#     Servo4.SetPos(0)
+# 
+#     time.sleep(1)
+#     if ord % 2 == 1:  # drone arrives odd number point, set servo motor 110degree
+#         Servo0.SetPos(100)
+#         print(" ** " + str(ord) + "point Delivery complete ** ")
+#         time.sleep(3)  # wait for finish
+#         Servo0.SetPos(0)
+#         time.sleep(1)
+#         Servo0.Cleanup()
+# 
+# 
+#     elif ord % 2 == 0:  #  drone arrives even number point, set servo motor 110degree
+#         Servo4.SetPos(100)
+#         print(" ** " + str(ord) + "point Delivery complete ** ")
+#         time.sleep(3)  # wait for finish
+#         Servo4.SetPos(0)
+#         time.sleep(1)
+#         Servo4.Cleanup()
+# 
+#     time.sleep(1)
 
 
 # Using thread to connect HPC image processing server and Web server
