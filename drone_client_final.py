@@ -249,7 +249,7 @@ def drone_fly(lati, longi):
                 time.sleep(1)
 
             dist = distance()
-            
+
             flytime = time.time() - starttime
             # For a complete implementation of follow me you'd want adjust this delay
 
@@ -627,5 +627,13 @@ if __name__=="__main__":
                 img_clientSocket.close()
         except Exception as e:  # when socket connection failed
             print(e)
+        except KeyboardInterrupt:
+            print("EMERGENCY LAND!!")
+            vehicle.mode = VehicleMode("LAND")
+            time.sleep(3)
     except Exception as e:  # when socket connection failed
         print(e)
+    except KeyboardInterrupt:
+        print("EMERGENCY LAND!!")
+        vehicle.mode = VehicleMode("LAND")
+        time.sleep(3)
