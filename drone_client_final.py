@@ -103,7 +103,7 @@ def distance():
                 if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
                     dist = bytes_serial[2] + bytes_serial[3] * 256
                     time.sleep(0.1)
-                    if 150 <= dist <= 400:
+                    if 150 <= dist <= 500:
                         print("Vehicle to Obstacle : " + str(dist))
                     ser.reset_input_buffer()
                     return dist
@@ -222,7 +222,7 @@ def drone_fly(lati, longi):
                 temp_lat = vehicle.location.global_relative_frame.lat
                 temp_long = vehicle.location.global_relative_frame.lon
 
-            if 150 <= dist <= 600:  # 6M from obstacle
+            if 150 <= dist <= 500:  # 5M from obstacle
                 msgTo_log_server("(Go)Detect Obstacle to " + str(dist) + "M")
 
                 i = i + 1
