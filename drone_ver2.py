@@ -17,7 +17,7 @@ pi = 3.1415926535897932384626433832795028841971693993751
 
 client_index = 6  # the number of client. Add 1 to use path information(for Home base and to return)
 locationsTo_Web = ""    # to send TSP path to Web server
-distanceTo_Web = ""   # to send point to point fly time to Web server
+distanceTo_Web = "0/"   # to send point to point fly time to Web server
 # land_point = "Land"
 
 clat = 0
