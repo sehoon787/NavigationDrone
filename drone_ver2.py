@@ -103,7 +103,26 @@ def distance(obstacle):
                     dist = bytes_serial[2] + bytes_serial[3]*256
                     time.sleep(1)
                     ser.reset_input_buffer()
-                    # print("Distance to Obstacle : " + str(dist))                    return dist
+                    print("Distance to Obstacle : " + str(dist))
+                    #return dist
+    except Exception as e:
+        print(e)
+
+def distance2():
+    global dist
+    try:
+        while True:
+            counter = ser.in_waiting
+            if counter > 8:
+                bytes_serial = ser.read(9)
+                ser.reset_input_buffer()
+
+                if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
+                    dist = bytes_serial[2] + bytes_serial[3]*256
+                    time.sleep(1)
+                    ser.reset_input_buffer()
+                    print("Distance to Obstacle : " + str(dist))
+                    return dist
     except Exception as e:
         print(e)
 
@@ -219,7 +238,7 @@ def drone_fly(lati, longi):
                 temp_lat = vehicle.location.global_relative_frame.lat
                 temp_long = vehicle.location.global_relative_frame.lon
 
-                msgTo_log_server("(Go)Detect Obstacle to " + str(dist) + "M")
+                msgTo_log_server("(Go)Detect Obstacle to " + str(dist) + "CM")
 
                 i = i + 1
                 msgTo_log_server("(Go)Up to : " + str(i))
@@ -251,10 +270,6 @@ def drone_fly(lati, longi):
                 calt = vehicle.location.global_relative_frame.alt
                 time.sleep(1)
 
-            if visitOrder == 3:
-                fakedist = fakedist + 10
-                if fakedist == 150:
-                    dist = 258
 
             flytime = time.time() - starttime
             # For a complete implementation of follow me you'd want adjust this delay
@@ -267,9 +282,6 @@ def drone_fly(lati, longi):
 
         msgTo_log_server("(Go)Close vehicle object")
         vehicle.close()
-
-        # put mini cargo on landing point
-        put_cargo(visitOrder)
 
         msgTo_log_server("(Go)Ready to leave to next Landing Point")
     except Exception as e:  # when socket connection failed
@@ -306,6 +318,11 @@ def drone_land(lati, longi):
             # print(find_point)       # to print center or not
 
             if vehicle.location.global_relative_frame.alt <= 1.6:     # if altitude is less than 1m
+
+                # put mini cargo on landing point
+                # put_cargo(visitOrder)
+                msgTo_log_server("Take/Put your luggage!")
+                time.sleep(8)
 
                 msgTo_log_server("(L)Set General Landing Mode")
                 vehicle.mode = VehicleMode("LAND")
@@ -367,55 +384,55 @@ def drone_land(lati, longi):
         vehicle.close()
         GPIO.cleanup()
 
-class SG90_92R_Class:
-# mPin : GPIO Number (PWM)
-# mPwm : PWM컨트롤러용 인스턴스
-# m_Zero_offset_duty
-
-    def __init__(self, Channel, ZeroOffset):
-        self.mChannel = Channel
-        self.m_ZeroOffset = ZeroOffset
-
-        # Adafruit_PCA9685 init
-        # address : I2C Channel 0x40 of PCA9685
-        self.mPwm = Adafruit_PCA9685.PCA9685(address = 0x40)
-        # set 50Hz, but  60Hz is better
-        self.mPwm.set_pwm_freq(60)
-
-    # set servo motor position
-    def SetPos(self, pos):
-        pulse = (650 - 150) * pos / 180 + 150 + self.m_ZeroOffset
-        self.mPwm.set_pwm(self.mChannel, 0, int(pulse))
-
-    # end
-    def Cleanup(self):
-        # reset servo motor 90 degree
-        self.SetPos(0)
-        time.sleep(1)
-# function to put mini cargo
-def put_cargo(ord):
-    Servo0.SetPos(0)
-    Servo4.SetPos(0)
-
-    time.sleep(1)
-    if ord % 2 == 1:  # drone arrives odd number point, set servo motor 110degree
-        Servo0.SetPos(100)
-        print(" ** " + str(ord) + "point Delivery complete ** ")
-        time.sleep(3)  # wait for finish
-        Servo0.SetPos(0)
-        time.sleep(1)
-        Servo0.Cleanup()
-
-
-    elif ord % 2 == 0:  #  drone arrives even number point, set servo motor 110degree
-        Servo4.SetPos(100)
-        print(" ** " + str(ord) + "point Delivery complete ** ")
-        time.sleep(3)  # wait for finish
-        Servo4.SetPos(0)
-        time.sleep(1)
-        Servo4.Cleanup()
-
-    time.sleep(1)
+# class SG90_92R_Class:
+# # mPin : GPIO Number (PWM)
+# # mPwm : PWM컨트롤러용 인스턴스
+# # m_Zero_offset_duty
+#
+#     def __init__(self, Channel, ZeroOffset):
+#         self.mChannel = Channel
+#         self.m_ZeroOffset = ZeroOffset
+#
+#         # Adafruit_PCA9685 init
+#         # address : I2C Channel 0x40 of PCA9685
+#         self.mPwm = Adafruit_PCA9685.PCA9685(address = 0x40)
+#         # set 50Hz, but  60Hz is better
+#         self.mPwm.set_pwm_freq(60)
+#
+#     # set servo motor position
+#     def SetPos(self, pos):
+#         pulse = (650 - 150) * pos / 180 + 150 + self.m_ZeroOffset
+#         self.mPwm.set_pwm(self.mChannel, 0, int(pulse))
+#
+#     # end
+#     def Cleanup(self):
+#         # reset servo motor 90 degree
+#         self.SetPos(0)
+#         time.sleep(1)
+# # function to put mini cargo
+# def put_cargo(ord):
+#     Servo0.SetPos(0)
+#     Servo4.SetPos(0)
+#
+#     time.sleep(1)
+#     if ord % 2 == 1:  # drone arrives odd number point, set servo motor 110degree
+#         Servo0.SetPos(100)
+#         print(" ** " + str(ord) + "point Delivery complete ** ")
+#         time.sleep(3)  # wait for finish
+#         Servo0.SetPos(0)
+#         time.sleep(1)
+#         Servo0.Cleanup()
+#
+#
+#     elif ord % 2 == 0:  #  drone arrives even number point, set servo motor 110degree
+#         Servo4.SetPos(100)
+#         print(" ** " + str(ord) + "point Delivery complete ** ")
+#         time.sleep(3)  # wait for finish
+#         Servo4.SetPos(0)
+#         time.sleep(1)
+#         Servo4.Cleanup()
+#
+#     time.sleep(1)
 
 
 # Using thread to connect HPC image processing server and Web server
@@ -557,8 +574,11 @@ if __name__=="__main__":
     if ser.isOpen() == False:
         ser.open()
 
-    Servo0 = SG90_92R_Class(Channel=0, ZeroOffset=-10)
-    Servo4 = SG90_92R_Class(Channel=4, ZeroOffset=-10)
+    # Servo0 = SG90_92R_Class(Channel=0, ZeroOffset=-10)
+    # Servo4 = SG90_92R_Class(Channel=4, ZeroOffset=-10)
+
+    distance2()
+    distance2()
 
     # socket connection address and port for Koren VM TSP server
     # get shortest path data from Koren VM TSP server
@@ -595,16 +615,18 @@ if __name__=="__main__":
                 # Image Processing Server Thread
                 sendImg = threading.Thread(target=send_To_HPC_Imgserver, args=(img_clientSocket,))
                 # receiver = threading.Thread(target=recv_From_HPC_Imgserver, args=(img_clientSocket,))
-                # find_obstacle = threading.Thread(target=distance, args=(img_clientSocket,))
+                find_obstacle = threading.Thread(target=distance, args=(img_clientSocket,))
 
                 ##  Start Thread
                 # Image Processing Server Thread
                 sendImg.start()
                 # receiver.start()
+
                 # Log Server Thread
                 sendLog.start()
+
                 # get distance to Ostacle
-                # find_obstacle.start()
+                find_obstacle.start()
 
 
                 while True:
@@ -626,7 +648,7 @@ if __name__=="__main__":
                 msgTo_log_server("EMERGENCY Return!!")
                 msgTo_log_server("***********************\nPlease wait for 10 sec to return!!\n***********************")
                 loc_point = LocationGlobalRelative(latitude[0], longitude[0], 3)
-                vehicle.simple_goto(loc_point, groundspeed=3)
+                vehicle.simple_goto(loc_point, groundspeed=2)
                 time.sleep(10)
                 vehicle.mode = VehicleMode("LAND")
                 time.sleep(3)
@@ -636,5 +658,7 @@ if __name__=="__main__":
                 img_clientSocket.close()
         except Exception as e:  # when socket connection failed
             print(e)
+            print("EMERGENCY LAND!!")
+            vehicle.mode = VehicleMode("LAND")
     except Exception as e:  # when socket connection failed
         print(e)
