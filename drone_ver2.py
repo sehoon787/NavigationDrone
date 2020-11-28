@@ -108,24 +108,6 @@ def distance(obstacle):
     except Exception as e:
         print(e)
 
-def distance2():
-    global dist
-    try:
-        while True:
-            counter = ser.in_waiting
-            if counter > 8:
-                bytes_serial = ser.read(9)
-                ser.reset_input_buffer()
-
-                if bytes_serial[0] == 0x59 and bytes_serial[1] == 0x59:
-                    dist = bytes_serial[2] + bytes_serial[3]*256
-                    time.sleep(1)
-                    ser.reset_input_buffer()
-                    print("Distance to Obstacle : " + str(dist))
-                    return dist
-    except Exception as e:
-        print(e)
-
 ## Drone Control function
 def arm_and_takeoff(aTargetAltitude):
     """
@@ -576,9 +558,6 @@ if __name__=="__main__":
 
     # Servo0 = SG90_92R_Class(Channel=0, ZeroOffset=-10)
     # Servo4 = SG90_92R_Class(Channel=4, ZeroOffset=-10)
-
-    distance2()
-    distance2()
 
     # socket connection address and port for Koren VM TSP server
     # get shortest path data from Koren VM TSP server
