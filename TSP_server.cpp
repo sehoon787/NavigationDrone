@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-//   library for Windows socket
+//   library for linux socket
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
